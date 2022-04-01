@@ -1,5 +1,4 @@
 #! /bin/bash
-#
 # Copyright (c) 2022, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
@@ -27,7 +26,15 @@
 
 set -o errexit -o pipefail -o noclobber -o nounset
 
-DIR0="$( cd "$1" && pwd )"
-DIR1="$DIR0/arm-homebrew"
-mkdir "$DIR1"
-curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "$DIR1"
+# ....................................................
+restore_and_save() {
+  echo "Patching $1"
+  test -e "$1.old" && cp -f "$1.old" "$1"
+  cp -f "$1" "$1.old"
+}
+
+# https://github.com/facebook/folly/issues/1478
+restore_and_save "$1"
+re="#elif defined(__FreeBSD__)"
+sbst="#else    \/* Tebako patched *\/" 
+sed -i "s/$re/$sbst/g" "$1"

@@ -1,4 +1,4 @@
-#! /bin/zsh
+#! /bin/bash
 #
 # Copyright (c) 2022, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
@@ -24,8 +24,6 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
-# More safety, by turning some bugs into errors.
 
 set -o errexit -o pipefail -o noclobber -o nounset
 

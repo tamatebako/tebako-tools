@@ -1,4 +1,4 @@
-#! /bin/zsh
+#! /bin/bash
 #
 # Copyright (c) 2022, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
@@ -25,10 +25,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# More safety, by turning some bugs into errors.
-
 set -o errexit -o pipefail -o noclobber -o nounset
-setopt sh_word_split
+
+# for zsh
+# https://stackoverflow.com/questions/6715388/variable-expansion-is-different-in-zsh-from-that-in-bash
+# setopt sh_word_split
 
 DIR0="$( cd "$1" && pwd )"
 DIR1="$DIR0/arm-homebrew"
@@ -36,7 +37,7 @@ DIR1="$DIR0/arm-homebrew"
 for bottle in "${@:2}"
 do
     echo "Installing $bottle"
-    response=$("$DIR1/bin/brew" fetch --force --bottle-tag=arm64_big_sur $bottle | grep "Downloaded to")
-    parsed=($response)
-    "$DIR1/bin/brew" install $parsed[3]
+    response=$("$DIR1/bin/brew" fetch --force --bottle-tag=arm64_big_sur "$bottle" | grep "Downloaded to")
+    IFS=" " read -r -a parsed <<< "$response"
+    "$DIR1/bin/brew" install "${parsed[2]}"
 done
