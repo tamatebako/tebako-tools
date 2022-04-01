@@ -25,8 +25,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# More safety, by turning some bugs into errors.
-
 set -o errexit -o pipefail -o noclobber -o nounset
 
 # for zsh

@@ -33,8 +33,36 @@ restore_and_save() {
   cp -f "$1" "$1.old"
 }
 
+if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
-restore_and_save "$1"
-re="#elif defined(__FreeBSD__)"
-sbst="#else    \/* Tebako patched *\/" 
-sed -i "s/$re/$sbst/g" "$1"
+  restore_and_save "$1/folly/experimental/symbolizer/Elf.cpp"
+  re="#elif defined(__FreeBSD__)"
+  sbst="#else    \/* Tebako patched *\/"
+  sed -i "s/$re/$sbst/g" "$1/folly/experimental/symbolizer/Elf.cpp"
+
+  restore_and_save "$1/CMake/FollyConfigChecks.cmake"
+  re="FOLLY_HAVE_IFUNC"
+  sbst="FOLLY_HAVE_IFUNC_NOT_PATCHED"
+  sed -i "s/$re/$sbst/g" "$1/CMake/FollyConfigChecks.cmake"
+
+  re="set(CMAKE_REQUIRED_FLAGS \"\${FOLLY_ORIGINAL_CMAKE_REQUIRED_FLAGS}\")"
+
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+set(CMAKE_REQUIRED_FLAGS \"\${FOLLY_ORIGINAL_CMAKE_REQUIRED_FLAGS}\")
+
+# -- Start of tebako patch --
+check_cxx_source_runs(\"
+  #pragma GCC diagnostic error \\\"-Wattributes\\\"
+  extern \\\"C\\\" int resolved_ifunc(void) { return 0; }
+  extern \\\"C\\\" int (*test_ifunc(void))() { return resolved_ifunc; }
+  int func() __attribute__((ifunc(\\\"test_ifunc\\\")));
+  int main() { return func(); }\"
+  FOLLY_HAVE_IFUNC
+)
+# -- End of tebako patch --
+EOM
+
+  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMake/FollyConfigChecks.cmake"
+
+fi
