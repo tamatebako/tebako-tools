@@ -169,6 +169,18 @@ elif [[ "$OSTYPE" == "msys"* ]]; then
   sbst="\/* using mode_t = unsigned int; --- tebako patched *\/"
   sed -i "s/$re/$sbst/g" "$1/folly/portability/SysTypes.h"
 
+  re="using uid_t = int;"
+  sbst="using uid_t = short; \/* --- tebako patched *\/"
+  sed -i "s/$re/$sbst/g" "$1/folly/portability/SysTypes.h"
+
+  re="using gid_t = int;"
+  # shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+using gid_t = short; \/* --- tebako patched *\/
+using nlink_t = short; \/* --- tebako patched *\/
+EOM
+  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysTypes.h"
+
 # --- folly/portability/SysStat.cpp ---
   funky_sysstat_patch "$1/folly/portability/SysStat.cpp"
 
@@ -186,8 +198,13 @@ EOM
   re="#define S_ISREG(mode) (((mode) & (_S_IFREG)) == (_S_IFREG) ? 1 : 0)"
   # shellcheck disable=SC2251
 ! IFS= read -r -d '' sbst << EOM
-#define S_ISREG(mode) (((mode) & (_S_IFREG)) == (_S_IFREG) ? 1 : 0)
-    -- End of tebako patch -- *\/
+#define S_ISREG(mode) (((mode) \& (_S_IFREG)) == (_S_IFREG) ? 1 : 0)
+*\/
+#define	_S_IFLNK	0xA000
+#define	S_IFLNK		_S_IFLNK
+#define S_ISLNK(mode) (((mode) \& (_S_IFLNK)) == (_S_IFLNK) ? 1 : 0)
+
+\/* -- End of tebako patch -- *\/
 EOM
   sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysStat.h"
 
@@ -278,6 +295,14 @@ EOM
   sbst="#define X_OK 1 \/* tebako patched *\/"
   do_patch  "$1/folly/portability/Unistd.h" "$re" "$sbst"
 
+  re="int getuid();"
+  sbst="uid_t getuid(); \/* tebako patched *\/"
+  sed -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.h"
+
+  re="int getgid();"
+  sbst="gid_t getgid(); \/* tebako patched *\/"
+  sed -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.h"
+
 # --- folly/portability/Fcntl.cpp ---
   re="#include <folly\/portability\/Windows\.h>"
 
@@ -338,7 +363,6 @@ EOM
 EOM
   sed -i -i "0,/$re/s||${sbst//$'\n'/"\\n"}|g" "$1/folly/portability/Sockets.h"
 
-
 # --- folly/portability/Time.cpp ---
   funky_time_patch "$1/folly/portability/Time.cpp"
 
@@ -346,44 +370,40 @@ EOM
   sbst="(asctime_s(tmpBuf, 64\/* tebako patched *\/, tm))"
   sed -i "s/$re/$sbst/g" "$1/folly/portability/Time.cpp"
 
-# --- jemalloc integration ---
-#
-# In order to configure optional jemalloc integration folly applies
-# fancy code that is based on either of tho fetures:
-# - weak symbols
-# - MSVC linker aliases
-# Since I do not have either I assume that patched folly build always employs jemalloc
-# So this match shall be used in conjuction with
-#          add_compile_definitions(USE_JEMALLOC)
-# in CMakeLists.txt
-  re="#ifdef _MSC_VER"
+# ---
+  re="#if (defined(USE_JEMALLOC) || FOLLY_USE_JEMALLOC) && !FOLLY_SANITIZE"
 # shellcheck disable=SC2251
 ! IFS= read -r -d '' sbst << EOM
-
 \/* -- Start of tebako patch -- *\/
-#ifdef __MINGW32__
-#ifndef USE_JEMALLOC
-#error USE_JEMALLOC shall be defined un CmakeLists.txt
-#endif
-#define mallocx je_mallocx
-#define rallocx je_rallocx
-#define xallocx je_xallocx
-#define sallocx je_sallocx
-#define dallocx je_dallocx
-#define sdallocx je_sdallocx
-#define nallocx je_nallocx
-#define mallctl je_mallctl
-#define mallctlnametomib je_mallctlnametomib
-#define mallctlbymib je_mallctlbymib
+#if defined(FOLLY_ASSUME_NO_JEMALLOC)
+#undef USE_JEMALLOC
+#undef FOLLY_USE_JEMALLOC
 #endif
 \/* -- End of tebako patch -- *\/
+#if (defined(USE_JEMALLOC) || defined(FOLLY_USE_JEMALLOC)) \&\& !FOLLY_SANITIZE  \/* tebako patched *\/
+EOM
+  do_patch_multiline  "$1/folly/portability/Malloc.h" "$re" "$sbst"
 
-#ifdef _MSC_VER
+# ---
+  re="#include <folly\/Portability\.h>"
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+#include <folly\/Portability.h>
+\/* -- Start of tebako patch -- *\/
+#include <folly\/portability\/Malloc.h>
+\/* -- End of tebako patch -- *\/
+
 EOM
   do_patch_multiline  "$1/folly/memory/detail/MallocImpl.h" "$re" "$sbst"
 
-# ---
+# --- folly/system/ThreadName.cpp ---
   defined_win32_to_msc_ver "$1/folly/system/ThreadName.cpp"
+
+  re="#if defined(__XROS__)"
+  sbst="#if defined(__XROS__) || defined(__MINGW32__) \/* tebako patched *\/"
+  sed -i "s/$re/$sbst/g" "$1/folly/system/ThreadName.cpp"
+
+# ---
   defined_msc_ver_to_win32 "$1/folly/external/farmhash/farmhash.cpp"
   defined_msc_ver_to_win32 "$1/folly/detail/IPAddressSource.h"
   defined_msc_ver_to_win32 "$1/folly/portability/Sockets.cpp"
@@ -396,4 +416,3 @@ EOM
   funky_systime_patch "$1/folly/portability/SysTime.h"
   funky_systime_patch "$1/folly/portability/SysTime.h"
 fi
-

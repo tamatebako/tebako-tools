@@ -47,4 +47,11 @@
     unsigned long  f_flag;     /* Mount flags */
     unsigned long  f_namemax;  /* Maximum filename length */
   };
+
+  enum {
+    ST_RDONLY = 1,		/* Mount read-only.  */
+#define ST_RDONLY	ST_RDONLY
+    ST_NOSUID = 2			/* Ignore suid and sgid bits.  */
+#define ST_NOSUID	ST_NOSUID
+  };
 #endif
