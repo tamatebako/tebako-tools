@@ -33,14 +33,18 @@ restore_and_save() {
   cp -f "$1" "$1.old"
 }
 
+do_patch() {
+  restore_and_save "$1"
+  sed -i "s/$2/$3/g" "$1"
+}
+
 # ....................................................
 # Surprise, surprise ... Upstream project shall found boost libraries for fbthrift
 # https://github.com/facebook/fbthrift/commit/c23af9dee42374d43d2f10e0e07edf1c1c97c328
 
 
-if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* ]]; then
+if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" ]]; then
   gSed="sed"
-
 # shellcheck disable=SC2251
 ! IFS= read -r -d '' sbst << EOM
 find_package(OpenSSL REQUIRED)
@@ -72,6 +76,17 @@ else
   exit 1
 fi
 
-restore_and_save "$1"
+restore_and_save "$1/CMakeLists.txt"
 re="find_package(OpenSSL REQUIRED)"
-"$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
+"$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMakeLists.txt"
+
+if [[ "$OSTYPE" == "msys" ]]; then
+  re="if(WIN32)"
+  sbst="if(MSVC) # tebako patched"
+  do_patch "$1/thrift/compiler/CMakeLists.txt" "$re" "$sbst"
+
+  re="ftruncate(file\.fd(), finalBufferSize);"
+  sbst="folly::portability::unistd::ftruncate(file.fd(), finalBufferSize); \/* tebako patched *\/"
+  do_patch "$1/thrift/lib/cpp2/frozen/FrozenUtil.h" "$re" "$sbst"
+
+fi
