@@ -53,6 +53,16 @@ defined_win32_to_msc_ver() {
   sed -i "s/$re/$sbst/g" "$1"
 }
 
+defined_n_win32_to_msc_ver() {
+  re="!defined(_WIN32)"
+  sbst="!defined(_MSC_VER) \/* tebako patched *\/ "
+  do_patch "$1" "$re" "$sbst"
+
+  re="#ifndef _WIN32"
+  sbst="#ifndef _MSC_VER \/* tebako patched *\/ "
+  sed -i "s/$re/$sbst/g" "$1"
+}
+
 defined_msc_ver_to_win32() {
   re="defined(_MSC_VER)"
   sbst="defined(_WIN32) \/* tebako patched *\/ "
@@ -407,6 +417,9 @@ EOM
   defined_msc_ver_to_win32 "$1/folly/external/farmhash/farmhash.cpp"
   defined_msc_ver_to_win32 "$1/folly/detail/IPAddressSource.h"
   defined_msc_ver_to_win32 "$1/folly/portability/Sockets.cpp"
+
+  defined_n_win32_to_msc_ver "$1/folly/portability/Dirent.h"
+  defined_win32_to_msc_ver "$1/folly/portability/Dirent.cpp"
 
   funky_stdio_patch "$1/folly/portability/Stdio.h"
   funky_stdio_patch "$1/folly/portability/Stdio.cpp"
