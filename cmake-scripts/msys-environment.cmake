@@ -41,6 +41,20 @@ if(MINGW)
   endif()
 
   get_filename_component(BASH_DIR "${SH}" DIRECTORY)
+
+  execute_process(
+    COMMAND "cygpath" "-w" "${BASH_DIR}"
+    RESULT_VARIABLE BASH_RES
+    OUTPUT_VARIABLE MSYS_BIN_RAW
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  if(NOT (BASH_RES EQUAL 0))
+    message(FATAL_ERROR "Could not find MSys root")
+  endif()
+  
+  STRING(REPLACE "\\" "/" MSYS_BIN ${MSYS_BIN_RAW} )
+  
   set(BASH "${BASH_DIR}/bash.exe")
 
   execute_process(
