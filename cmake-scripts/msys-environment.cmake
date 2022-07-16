@@ -52,9 +52,15 @@ if(MINGW)
   if(NOT (BASH_RES EQUAL 0))
     message(FATAL_ERROR "Could not find MSys root")
   endif()
-  
-  STRING(REPLACE "\\" "/" MSYS_BIN ${MSYS_BIN_RAW} )
-  
+
+# Some black magic below
+  cmake_path(SET MSYS_USR_RAW NORMALIZE "${MSYS_BIN_RAW}\\..\\..\\usr")
+  cmake_path(SET MSYS_TMP_RAW NORMALIZE "${MSYS_USR_RAW}\\..\\tmp")
+
+  string(REPLACE "\\" "\\\\" MSYS_BIN ${MSYS_BIN_RAW} )
+  string(REPLACE "/" "\\\\" MSYS_USR ${MSYS_USR_RAW} )
+  string(REPLACE "/" "\\\\" MSYS_TMP ${MSYS_TMP_RAW} )
+
   set(BASH "${BASH_DIR}/bash.exe")
 
   execute_process(
