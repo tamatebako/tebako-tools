@@ -41,6 +41,26 @@ if(MINGW)
   endif()
 
   get_filename_component(BASH_DIR "${SH}" DIRECTORY)
+
+  execute_process(
+    COMMAND "cygpath" "-w" "${BASH_DIR}"
+    RESULT_VARIABLE BASH_RES
+    OUTPUT_VARIABLE MSYS_BIN_RAW
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  if(NOT (BASH_RES EQUAL 0))
+    message(FATAL_ERROR "Could not find MSys root")
+  endif()
+
+# Some black magic below
+  cmake_path(SET MSYS_USR_RAW NORMALIZE "${MSYS_BIN_RAW}\\..\\..\\usr")
+  cmake_path(SET MSYS_TMP_RAW NORMALIZE "${MSYS_USR_RAW}\\..\\tmp")
+
+  string(REPLACE "\\" "\\\\" MSYS_BIN ${MSYS_BIN_RAW} )
+  string(REPLACE "/" "\\\\" MSYS_USR ${MSYS_USR_RAW} )
+  string(REPLACE "/" "\\\\" MSYS_TMP ${MSYS_TMP_RAW} )
+
   set(BASH "${BASH_DIR}/bash.exe")
 
   execute_process(
