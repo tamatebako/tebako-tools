@@ -121,13 +121,6 @@ funky_time_patch() {
   do_patch "$1" "$re" "$sbst"
 }
 
-funky_systime_patch() {
-  re="int gettimeofday(timeval\* tv, folly_port_struct_timezone\*);"
-  sbst="\/* int gettimeofday(timeval* tv, folly_port_struct_timezone*); --- tebako patched *\/"
-  do_patch  "$1" "$re" "$sbst"
-}
-
-
 if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
   re="#elif defined(__FreeBSD__)"
@@ -426,6 +419,12 @@ EOM
   funky_string_patch "$1/folly/portability/String.h"
   funky_string_patch "$1/folly/portability/String.cpp"
   funky_time_patch "$1/folly/portability/Time.h"
-  funky_systime_patch "$1/folly/portability/SysTime.h"
-  funky_systime_patch "$1/folly/portability/SysTime.h"
+
+# Note: the patch below comments out
+#   int gettimeofday(timeval* tv, folly_port_struct_timezone*);
+#   void timeradd(timeval* a, timeval* b, timeval* res);
+#   void timersub(timeval* a, timeval* b, timeval* res);
+# while gettimeofday is provided by MSys, the other two functions are lost
+  defined_n_win32_to_msc_ver "$1/folly/portability/SysTime.h"
+  defined_win32_to_msc_ver "$1/folly/portability/SysTime.cpp"
 fi
