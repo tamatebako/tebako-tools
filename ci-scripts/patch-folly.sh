@@ -119,6 +119,20 @@ funky_time_patch() {
   re="char\* asctime_r(const tm\* tm, char\* buf)"
   sbst="char* _folly_asctime_r(const tm* tm, char* buf) \/* tebako patched *\/"
   do_patch "$1" "$re" "$sbst"
+
+  re="tm\* gmtime_r(const time_t\* t, tm\* res)"
+  sbst="tm* _folly_gmtime_r(const time_t* t, tm* res) \/* tebako patched *\/"
+  sed -i "s/$re/$sbst/g" "$1"
+
+  re="tm\* localtime_r(const time_t\* t, tm\* o)"
+  sbst="tm* _folly_localtime_r(const time_t* t, tm* o) \/* tebako patched *\/"
+  sed -i "s/$re/$sbst/g" "$1"
+}
+
+funky_formatter_patch() {
+  re="if (!localtime_r(&unixTimestamp, &ltime)) {"
+  sbst="if (!_folly_localtime_r(\&unixTimestamp, \&ltime)) { \/* tebako patched *\/"
+  do_patch "$1" "$re" "$sbst"
 }
 
 if [[ "$OSTYPE" == "linux-musl"* ]]; then
@@ -419,6 +433,8 @@ EOM
   funky_string_patch "$1/folly/portability/String.h"
   funky_string_patch "$1/folly/portability/String.cpp"
   funky_time_patch "$1/folly/portability/Time.h"
+  funky_formatter_patch "$1/folly/logging/CustomLogFormatter.cpp"
+  funky_formatter_patch "$1/folly/logging/GlogStyleFormatter.cpp"
 
 # Note: the patch below comments out
 #   int gettimeofday(timeval* tv, folly_port_struct_timezone*);
@@ -427,4 +443,5 @@ EOM
 # while gettimeofday is provided by MSys, the other two functions are lost
   defined_n_win32_to_msc_ver "$1/folly/portability/SysTime.h"
   defined_win32_to_msc_ver "$1/folly/portability/SysTime.cpp"
+
 fi
