@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2021-2023, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tamatebako
 #
@@ -23,6 +23,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
+
+set(GNU_BASH "bash")
 
 if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
 # If we are cross compiling TARGET_HOMEBREW will point to homebrew environment for target
@@ -94,10 +96,8 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
 
   message("Using target brew environment at ${TARGET_BREW_PREFIX}")
   set(OPENSSL_ROOT_DIR "${TARGET_BREW_PREFIX}/opt/openssl@1.1")
-  set(CMAKE_PREFIX_PATH "${TARGET_BREW_PREFIX};${TARGET_BREW_PREFIX}/opt/openssl@1.1;${TARGET_BREW_PREFIX}/opt/zlib")
+  set(CMAKE_PREFIX_PATH "${TARGET_BREW_PREFIX}")
   include_directories("${TARGET_BREW_PREFIX}/include")
-
-  set(ENV{PKG_CONFIG_PATH} "${TARGET_BREW_PREFIX}/opt/libarchive/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
 
 # Suppress superfluous randlib warnings about "*.a" having no symbols on MacOSX.
   set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
