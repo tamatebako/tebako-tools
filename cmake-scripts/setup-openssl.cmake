@@ -33,7 +33,7 @@ execute_process(
 )
 
 if(OPENSSL_RES EQUAL 0)
-  string(REGEX MATCH "^OpenSSL ([1-9][.][0-9][.][0-9][a-z])" OPENSSL_VER_TMP ${OPENSSL_VER_STR})
+  string(REGEX MATCH "^OpenSSL ([1-9][.][0-9][.][0-9])" OPENSSL_VER_TMP ${OPENSSL_VER_STR})
   set(OPENSSL_VER ${CMAKE_MATCH_1})
   message(STATUS "Found OpenSSL version ${OPENSSL_VER} at ${DEPS}/bin/openssl")
   if((${OPENSSL_VER} VERSION_GREATER_EQUAL "1.1.0") AND (${OPENSSL_VER} VERSION_LESS "3.0.0"))
@@ -59,37 +59,11 @@ if(WITH_OPENSSL_BUILD)
       set(OPENSSL_LOC "<unknown>")
     endif(NOT OPENSSL_RES EQUAL 0)
 
-    string(REGEX MATCH "^OpenSSL ([1-9][.][0-9][.][0-9][a-z])" OPENSSL_VER_TMP ${OPENSSL_VER_STR})
+    string(REGEX MATCH "^OpenSSL ([1-9][.][0-9][.][0-9])" OPENSSL_VER_TMP ${OPENSSL_VER_STR})
     set(OPENSSL_VER ${CMAKE_MATCH_1})
     message(STATUS "Found OpenSSL version ${OPENSSL_VER} at ${OPENSSL_LOC}")
     if((${OPENSSL_VER} VERSION_GREATER_EQUAL "1.1.0") AND (${OPENSSL_VER} VERSION_LESS "3.0.0"))
       set(WITH_OPENSSL_BUILD OFF)
     endif((${OPENSSL_VER} VERSION_GREATER_EQUAL "1.1.0") AND (${OPENSSL_VER} VERSION_LESS "3.0.0"))
   endif(OPENSSL_RES EQUAL 0)
-endif(WITH_OPENSSL_BUILD)
-
-if(WITH_OPENSSL_BUILD)
-  message(STATUS "Building OpenSSL since Ruby 2.x requires 1.1.x")
-  def_ext_prj_g(OPENSSL "OpenSSL_1_1_1s")
-
-  set(__LIBSSL "${DEPS}/lib/libssl.a")
-  set(__LIBCRYPTO "${DEPS}/lib/libcrypto.a")
-
-  ExternalProject_Add(${OPENSSL_PRJ}
-    PREFIX ${DEPS}
-    GIT_REPOSITORY "https://github.com/openssl/openssl.git"
-    GIT_TAG ${OPENSSL_TAG}
-    UPDATE_COMMAND ""
-    SOURCE_DIR ${OPENSSL_SOURCE_DIR}
-    BINARY_DIR ${OPENSSL_BINARY_DIR}
-    CONFIGURE_COMMAND   ${GNU_BASH} -c "${OPENSSL_SOURCE_DIR}/config          \
-                                                        --openssldir=${DEPS}  \
-                                                        --prefix=${DEPS}"
-    BUILD_BYPRODUCTS ${__LIBSSL} ${__LIBCRYPTO}
-  )
-
-else(WITH_OPENSSL_BUILD)
-  find_library(_LIBSSL "libssl.a" REQUIRED HINTS ${DEPS}/lib)
-  find_library(_LIBCRYPTO "libcrypto.a" REQUIRED HINTS ${DEPS}/lib)
-
 endif(WITH_OPENSSL_BUILD)
