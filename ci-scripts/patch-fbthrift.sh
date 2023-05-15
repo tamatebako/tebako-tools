@@ -35,7 +35,12 @@ restore_and_save() {
 
 do_patch() {
   restore_and_save "$1"
-  sed -i "s/$2/$3/g" "$1"
+  "$gSed" -i "s/$2/$3/g" "$1"
+}
+
+do_patch_multiline() {
+  restore_and_save "$1"
+  "$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
 }
 
 # ....................................................
@@ -79,6 +84,21 @@ fi
 restore_and_save "$1/CMakeLists.txt"
 re="find_package(OpenSSL REQUIRED)"
 "$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMakeLists.txt"
+
+# GCC 13 compatibility
+# --- thrift/compiler/lib/cpp2/util.cc ---
+re="#include <stdexcept>"
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+#include <stdexcept>
+
+\/* -- Start of tebako patch -- *\/
+#include <cstdint>
+\/* -- End of tebako patch -- *\/
+EOM
+
+do_patch_multiline "$1/thrift/compiler/lib/cpp2/util.cc"
+
 
 if [[ "$OSTYPE" == "msys" ]]; then
   re="if(WIN32)"

@@ -135,6 +135,20 @@ funky_formatter_patch() {
   do_patch "$1" "$re" "$sbst"
 }
 
+# GCC 13 compatibility
+# --- folly/detail/AtFork.cpp ---
+re="#include <mutex>"
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+#include <mutex>
+
+\/* -- Start of tebako patch -- *\/
+#include <system_error>
+\/* -- End of tebako patch -- *\/
+EOM
+
+do_patch_multiline "$1/folly/detail/AtFork.cpp"
+
 if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
   re="#elif defined(__FreeBSD__)"
