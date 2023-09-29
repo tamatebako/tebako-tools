@@ -39,7 +39,7 @@ install_cmake() {
   pushd "${cmake_install}"
   wget  "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-${ARCH}.sh"
   chmod +x "cmake-${CMAKE_VERSION}-${ARCH}.sh"
-  "./cmake-${CMAKE_VERSION}-${ARCH}.sh" --skip-license --prefix=/usr/local
+  "./cmake-${CMAKE_VERSION}-${ARCH}.sh" --skip-license --prefix=/usr
   popd
   rm -rf "${cmake_install}"
 }
