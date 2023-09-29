@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright (c) 2022, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2022-2023, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -135,24 +135,10 @@ funky_formatter_patch() {
   do_patch "$1" "$re" "$sbst"
 }
 
-# GCC 13 compatibility
-# --- folly/detail/AtFork.cpp ---
-re="#include <mutex>"
-# shellcheck disable=SC2251
-! IFS= read -r -d '' sbst << EOM
-#include <mutex>
-
-\/* -- Start of tebako patch -- *\/
-#include <system_error>
-\/* -- End of tebako patch -- *\/
-EOM
-
-do_patch_multiline "$1/folly/detail/AtFork.cpp"
-
 if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
   re="#elif defined(__FreeBSD__)"
-  sbst="#else    \/* Tebako patched *\/"
+  sbst="#elif defined(__FreeBSD__) || defined(__musl__)  \/* Tebako patched *\/"
   do_patch "$1/folly/experimental/symbolizer/Elf.cpp" "$re" "$sbst"
 
   restore_and_save "$1/CMake/FollyConfigChecks.cmake"
