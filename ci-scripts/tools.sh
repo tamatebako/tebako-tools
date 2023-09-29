@@ -59,4 +59,5 @@ build_and_install_libarchive() {
   rm -rf "$libarchive_build"
 }
 
+# shellcheck disable=SC2068
 $@
