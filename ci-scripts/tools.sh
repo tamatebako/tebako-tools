@@ -34,14 +34,14 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 install_cmake() {
   echo "Running install_cmake version ${CMAKE_VERSION} for ${ARCH}"
-  local cmake_install=${LOCAL_BUILDS}/cmake
-  mkdir -p ${cmake_install}
-  pushd ${cmake_install}
-  wget  https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-${ARCH}.sh
-  chmod +x cmake-${CMAKE_VERSION}-${ARCH}.sh
-  ./cmake-${CMAKE_VERSION}-${ARCH}.sh --skip-license --prefix=/usr/local
+  local cmake_install="${LOCAL_BUILDS}/cmake"
+  mkdir -p "${cmake_install}"
+  pushd "${cmake_install}"
+  wget  "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-${ARCH}.sh"
+  chmod +x "cmake-${CMAKE_VERSION}-${ARCH}.sh"
+  "./cmake-${CMAKE_VERSION}-${ARCH}.sh" --skip-license --prefix=/usr/local
   popd
-  rm -rf ${cmake_install}
+  rm -rf "${cmake_install}"
 }
 
 build_and_install_libarchive() {
