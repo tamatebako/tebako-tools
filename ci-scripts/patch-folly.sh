@@ -27,9 +27,9 @@
 set -o errexit -o pipefail -o noclobber -o nounset
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  GNU_SED=gsed
+  GNU_SED="gsed"
 else
-  GNU_SED=sed
+  GNU_SED="sed"
 fi
 
 # ....................................................
