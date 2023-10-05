@@ -33,6 +33,7 @@ set(CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=${DEPS}
                     -DENABLE_CNG:BOOL=OFF
                     -DENABLE_ICONV:BOOL=OFF
                     -DENABLE_LIBXML2:BOOL=OFF
+                    -DENABLE_BZip2:BOOL=OFF
                     -DENABLE_TEST:BOOL=OFF
                     -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
                     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
