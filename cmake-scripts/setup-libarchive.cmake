@@ -29,11 +29,16 @@ message(STATUS "Collecting libarchive - " v${LIBARCHIVE_VER} " at " ${LIBARCHIVE
 
 set(CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=${DEPS}
                     -DCMAKE_BUILD_TYPE=Release
+                    -DBUILD_SHARED_LIBS:BOOL=OFF
                     -DENABLE_ACL:BOOL=OFF
                     -DENABLE_CNG:BOOL=OFF
                     -DENABLE_ICONV:BOOL=OFF
                     -DENABLE_LIBXML2:BOOL=OFF
                     -DENABLE_BZip2:BOOL=OFF
+                    -DENABLE_CPIO:BOOL=OFF
+                    -DENABLE_CAT:BOOL=OFF
+                    -DENABLE_TAR:BOOL=OFF
+                    -DENABLE_UNZIP:BOOL=OFF
                     -DENABLE_TEST:BOOL=OFF
                     -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
                     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
