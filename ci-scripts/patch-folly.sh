@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright (c) 2022, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2022-2023, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -26,6 +26,12 @@
 
 set -o errexit -o pipefail -o noclobber -o nounset
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  GNU_SED="gsed"
+else
+  GNU_SED="sed"
+fi
+
 # ....................................................
 restore_and_save() {
   echo "Patching $1"
@@ -35,12 +41,12 @@ restore_and_save() {
 
 do_patch() {
   restore_and_save "$1"
-  sed -i "s/$2/$3/g" "$1"
+  "$GNU_SED" -i "s/$2/$3/g" "$1"
 }
 
 do_patch_multiline() {
   restore_and_save "$1"
-  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
 }
 
 defined_win32_to_msc_ver() {
@@ -50,7 +56,7 @@ defined_win32_to_msc_ver() {
 
   re="#ifdef _WIN32"
   sbst="#ifdef _MSC_VER \/* tebako patched *\/ "
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 defined_n_win32_to_msc_ver() {
@@ -60,7 +66,7 @@ defined_n_win32_to_msc_ver() {
 
   re="#ifndef _WIN32"
   sbst="#ifndef _MSC_VER \/* tebako patched *\/ "
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 defined_msc_ver_to_win32() {
@@ -70,7 +76,7 @@ defined_msc_ver_to_win32() {
 
   re="#ifdef _MSC_VER"
   sbst="#ifdef _WIN32 \/* tebako patched *\/ "
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 funky_stdio_patch() {
@@ -80,11 +86,11 @@ funky_stdio_patch() {
 
   re="FILE\* popen(const char\* name, const char\* mode)"
   sbst="FILE* _folly_popen(const char* name, const char* mode) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 
   re="int vasprintf(char\*\* dest, const char\* format, va_list ap)"
   sbst="int _folly_vasprintf(char** dest, const char* format, va_list ap) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 funky_sysstat_patch() {
@@ -94,15 +100,15 @@ funky_sysstat_patch() {
 
   re="int mkdir(const char\* fn, int mode)"
   sbst="int _folly_mkdir(const char* fn, int mode) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 
   re="int mkdir(const char\* fn, int \/\* mode \*\/)"
   sbst="int _folly_mkdir(const char* fn, int \/* mode *\/) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 
   re="int umask(int md)"
   sbst="int _folly_umask(int md) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 funky_string_patch() {
@@ -112,7 +118,7 @@ funky_string_patch() {
 
   re="int strncasecmp(const char\* a, const char\* b, size_t c)"
   sbst="int _folly_strncasecmp(const char* a, const char* b, size_t c) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 funky_time_patch() {
@@ -122,11 +128,11 @@ funky_time_patch() {
 
   re="tm\* gmtime_r(const time_t\* t, tm\* res)"
   sbst="tm* _folly_gmtime_r(const time_t* t, tm* res) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 
   re="tm\* localtime_r(const time_t\* t, tm\* o)"
   sbst="tm* _folly_localtime_r(const time_t* t, tm* o) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 funky_formatter_patch() {
@@ -135,30 +141,16 @@ funky_formatter_patch() {
   do_patch "$1" "$re" "$sbst"
 }
 
-# GCC 13 compatibility
-# --- folly/detail/AtFork.cpp ---
-re="#include <mutex>"
-# shellcheck disable=SC2251
-! IFS= read -r -d '' sbst << EOM
-#include <mutex>
-
-\/* -- Start of tebako patch -- *\/
-#include <system_error>
-\/* -- End of tebako patch -- *\/
-EOM
-
-do_patch_multiline "$1/folly/detail/AtFork.cpp"
-
 if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
   re="#elif defined(__FreeBSD__)"
-  sbst="#else    \/* Tebako patched *\/"
+  sbst="#elif defined(__FreeBSD__) || defined(__musl__)  \/* Tebako patched *\/"
   do_patch "$1/folly/experimental/symbolizer/Elf.cpp" "$re" "$sbst"
 
   restore_and_save "$1/CMake/FollyConfigChecks.cmake"
   re="FOLLY_HAVE_IFUNC"
   sbst="FOLLY_HAVE_IFUNC_NOT_PATCHED"
-  sed -i "s/$re/$sbst/g" "$1/CMake/FollyConfigChecks.cmake"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/CMake/FollyConfigChecks.cmake"
 
   re="set(CMAKE_REQUIRED_FLAGS \"\${FOLLY_ORIGINAL_CMAKE_REQUIRED_FLAGS}\")"
 
@@ -178,7 +170,29 @@ check_cxx_source_runs(\"
 # -- End of tebako patch --
 EOM
 
-  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMake/FollyConfigChecks.cmake"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMake/FollyConfigChecks.cmake"
+
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  re="  set(OPENSSL_ROOT_DIR \"\/usr\/local\/opt\/openssl\" )"
+
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+# -- Start of tebako patch --
+ if (NOT OPENSSL_ROOT_DIR)
+   set(OPENSSL_ROOT_DIR \"\/usr\/local\/opt\/openssl\")
+ endif(NOT OPENSSL_ROOT_DIR)
+# -- End of tebako patch --
+EOM
+
+  do_patch_multiline  "$1/CMakeLists.txt" "$re" "$sbst"
+
+  re="set(OPENSSL_LIBRARIES \"\/usr\/local\/opt\/openssl\/lib\" )"
+  sbst="set(OPENSSL_LIBRARIES \"\${OPENSSL_ROOT_DIR}\/lib\")    # tebako patched"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/CMakeLists.txt"
+
+  re="set(OPENSSL_INCLUDE_DIR \"\/usr\/local\/opt\/openssl\/include\" )"
+  sbst="set(OPENSSL_INCLUDE_DIR \"\${OPENSSL_ROOT_DIR}\/include\")    # tebako patched"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/CMakeLists.txt"
 
 elif [[ "$OSTYPE" == "msys"* ]]; then
 # --- folly/portability/Stdlib.h ---
@@ -198,11 +212,11 @@ elif [[ "$OSTYPE" == "msys"* ]]; then
 
   re="using mode_t = unsigned int;"
   sbst="\/* using mode_t = unsigned int; --- tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1/folly/portability/SysTypes.h"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/SysTypes.h"
 
   re="using uid_t = int;"
   sbst="using uid_t = short; \/* --- tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1/folly/portability/SysTypes.h"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/SysTypes.h"
 
   re="using gid_t = int;"
   # shellcheck disable=SC2251
@@ -210,7 +224,7 @@ elif [[ "$OSTYPE" == "msys"* ]]; then
 using gid_t = short; \/* --- tebako patched *\/
 using nlink_t = short; \/* --- tebako patched *\/
 EOM
-  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysTypes.h"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysTypes.h"
 
 # --- folly/portability/SysStat.cpp ---
   funky_sysstat_patch "$1/folly/portability/SysStat.cpp"
@@ -224,7 +238,7 @@ EOM
 \/* -- Start of tebako patch --
 #define S_IXUSR 0
 EOM
-  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysStat.h"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysStat.h"
 
   re="#define S_ISREG(mode) (((mode) & (_S_IFREG)) == (_S_IFREG) ? 1 : 0)"
   # shellcheck disable=SC2251
@@ -237,7 +251,7 @@ EOM
 
 \/* -- End of tebako patch -- *\/
 EOM
-  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysStat.h"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/portability/SysStat.h"
 
 # --- folly/portability/SysTime.h ---
   re="int gettimeofday(timeval\* tv, folly_port_struct_timezone\*);"
@@ -248,54 +262,54 @@ EOM
   defined_msc_ver_to_win32 "$1/folly/FileUtil.cpp"
   re="(open,"
   sbst="(\/* tebako patched *\/ folly::portability::fcntl::open,"
-  sed -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
   re="close(tmpFD)"
   sbst="\/* tebako patched *\/ folly::portability::unistd::close(tmpFD)"
-  sed -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
   re="(close(fd))"
   sbst="(\/* tebako patched *\/ folly::portability::unistd::close(fd))"
-  sed -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
   re="(read,"
   sbst="(\/* tebako patched *\/ folly::portability::unistd::read,"
-  sed -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
   re="(write,"
   sbst="(\/* tebako patched *\/ folly::portability::unistd::write,"
-  sed -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
   re="(dup,"
   sbst="(\/* tebako patched *\/ folly::portability::unistd::dup,"
-  sed -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
   re="(dup2,"
   sbst="(\/* tebako patched *\/ folly::portability::unistd::dup2,"
-  sed -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
 # --- folly/experimental/TestUtil.cpp ---
   defined_win32_to_msc_ver "$1/folly/experimental/TestUtil.cpp"
   re="dup("
   sbst="\/* tebako patched *\/ folly::portability::unistd::dup("
-  sed -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
 
   re="dup2("
   sbst="\/* tebako patched *\/ folly::portability::unistd::dup2("
-  sed -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
 
   re="lseek("
   sbst="\/* tebako patched *\/ folly::portability::unistd::lseek("
-  sed -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
 
   re="(close("
   sbst="(\/* tebako patched *\/ folly::portability::unistd::close("
-  sed -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
 
 # --- folly/system/MemoryMapping.cpp ---
   re="0 == ftruncate("
   sbst="0 == \/* tebako patched *\/ folly::portability::unistd::ftruncate("
-  sed -i "s/$re/$sbst/g" "$1/folly/system/MemoryMapping.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/system/MemoryMapping.cpp"
 
 # --- folly/portability/SysUio.cpp ---
   re="lseek(fd,"
@@ -309,7 +323,7 @@ EOM
 
   re="lseek(fd, 0,"
   sbst=" \/* tebako patched *\/ folly::portability::unistd::lseek(fd, 0,"
-  sed -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.cpp"
 
 # --- folly/logging/ImmediateFileWriter.h ---
   re="isatty(file"
@@ -328,11 +342,11 @@ EOM
 
   re="int getuid();"
   sbst="uid_t getuid(); \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.h"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.h"
 
   re="int getgid();"
   sbst="gid_t getgid(); \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.h"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.h"
 
 # --- folly/portability/Fcntl.cpp ---
   re="#include <folly\/portability\/Windows\.h>"
@@ -366,7 +380,7 @@ EOM
 #ifndef __MINGW32__   \/* -- Tebako patched -- *\/
   __try {
 EOM
-  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/net/detail/SocketFileDescriptorMap.cpp"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/net/detail/SocketFileDescriptorMap.cpp"
 
   re="\/\/ We're at the core, we don't get the luxery of SCOPE_EXIT because"
 # shellcheck disable=SC2251
@@ -374,7 +388,7 @@ EOM
 #endif    \/* -- Tebako patched -- *\/
 \/\/ We're at the core, we don't get the luxery of SCOPE_EXIT because
 EOM
-  sed -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/net/detail/SocketFileDescriptorMap.cpp"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/folly/net/detail/SocketFileDescriptorMap.cpp"
 
 # --- folly/portability/Sockets.h ---
   restore_and_save "$1/folly/portability/Sockets.h"
@@ -392,14 +406,14 @@ EOM
 \/* -- End of tebako patch -- *\/
 
 EOM
-  sed -i -i "0,/$re/s||${sbst//$'\n'/"\\n"}|g" "$1/folly/portability/Sockets.h"
+  "$GNU_SED" -i -i "0,/$re/s||${sbst//$'\n'/"\\n"}|g" "$1/folly/portability/Sockets.h"
 
 # --- folly/portability/Time.cpp ---
   funky_time_patch "$1/folly/portability/Time.cpp"
 
   re="(asctime_s(tmpBuf, tm))"
   sbst="(asctime_s(tmpBuf, 64\/* tebako patched *\/, tm))"
-  sed -i "s/$re/$sbst/g" "$1/folly/portability/Time.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Time.cpp"
 
 # ---
   re="#if (defined(USE_JEMALLOC) || FOLLY_USE_JEMALLOC) && !FOLLY_SANITIZE"
@@ -432,7 +446,7 @@ EOM
 
   re="#if defined(__XROS__)"
   sbst="#if defined(__XROS__) || defined(__MINGW32__) \/* tebako patched *\/"
-  sed -i "s/$re/$sbst/g" "$1/folly/system/ThreadName.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/system/ThreadName.cpp"
 
 # ---
   defined_msc_ver_to_win32 "$1/folly/external/farmhash/farmhash.cpp"

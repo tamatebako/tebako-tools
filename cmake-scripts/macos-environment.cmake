@@ -24,27 +24,23 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(GNU_BASH "bash")
-
 if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
-# If we are cross compiling TARGET_HOMEBREW will point to homebrew environment for target
-# If we are not cross-compiling it will be empty
-# Note that below for Bison, Flex and bash we are using host homebrew environment (just 'brew')
-# while other packages refer target environment potentially specified by BREW_BIN
   execute_process(
     COMMAND brew --prefix
     RESULT_VARIABLE BREW_PREFIX_RES
-    OUTPUT_VARIABLE BUILD_BREW_PREFIX
+    OUTPUT_VARIABLE BREW_PREFIX
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  if(NOT (BREW_PREFIX_RES EQUAL 0 AND EXISTS ${BUILD_BREW_PREFIX}))
+  if(NOT (BREW_PREFIX_RES EQUAL 0 AND EXISTS ${BREW_PREFIX}))
     message(FATAL "Could not find build brew setup")
   endif()
 
-  message("Using build brew environment at ${BUILD_BREW_PREFIX}")
-# https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.me
-  set(BUILD_OPENSSL_ROOT_DIR "${BUILD_BREW_PREFIX}/opt/openssl@1.1")
-  set(BUILD_CMAKE_PREFIX_PATH "${BUILD_BREW_PREFIX}")
+  message(STATUS "Using brew environment at ${BREW_PREFIX}")
+  # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.me
+  set(OPENSSL_ROOT_DIR "${BREW_PREFIX}/opt/openssl@3")
+  set(CMAKE_PREFIX_PATH "${BREW_PREFIX}")
+  include_directories("{OPENSSL_ROOT_DIR}/include")
+  include_directories("${TARGET_BREW_PREFIX}/include")
 
   #  https://stackoverflow.com/questions/53877344/cannot-configure-cmake-to-look-for-homebrew-installed-version-of-bison
   execute_process(
@@ -79,25 +75,6 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
     message(STATUS "Found GNU bash keg installed by Homebrew at ${BREW_BASH_PREFIX}")
     set(GNU_BASH "${BREW_BASH_PREFIX}/bin/bash")
   endif()
-
-  if(NOT TARGET_HOMEBREW)
-    set(TARGET_BREW_PREFIX ${BUILD_BREW_PREFIX} )
-  else()
-    execute_process(
-        COMMAND "${TARGET_HOMEBREW}/bin/brew" --prefix
-        RESULT_VARIABLE BREW_PREFIX_RES
-        OUTPUT_VARIABLE TARGET_BREW_PREFIX
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    if(NOT (BREW_PREFIX_RES EQUAL 0 AND EXISTS ${TARGET_BREW_PREFIX}))
-        message(FATAL "Could not find target brew setup")
-    endif()
-  endif()
-
-  message("Using target brew environment at ${TARGET_BREW_PREFIX}")
-  set(OPENSSL_ROOT_DIR "${TARGET_BREW_PREFIX}/opt/openssl@1.1")
-  set(CMAKE_PREFIX_PATH "${TARGET_BREW_PREFIX}")
-  include_directories("${TARGET_BREW_PREFIX}/include")
 
 # Suppress superfluous randlib warnings about "*.a" having no symbols on MacOSX.
   set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
