@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2022-2024 [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -38,7 +38,6 @@ set(CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=${DEPS}
                     -DENABLE_CPIO:BOOL=OFF
                     -DENABLE_CAT:BOOL=OFF
                     -DENABLE_TAR:BOOL=OFF
-                    -DENABLE_UNZIP:BOOL=OFF
                     -DENABLE_TEST:BOOL=OFF
                     -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
                     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
