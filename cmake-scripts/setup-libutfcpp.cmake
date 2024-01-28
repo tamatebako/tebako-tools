@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2022-2024 [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -54,7 +54,3 @@ ExternalProject_Add(${LIBUTFCPP_PRJ}
   BINARY_DIR ${LIBUTFCPP_BINARY_DIR}
   BUILD_BYPRODUCTS ${__LIBUTFCPP}
 )
-
-#add_library(_LIBUTFCPP STATIC IMPORTED)
-#set_target_properties(_LIBUTFCPP PROPERTIES IMPORTED_LOCATION  ${__LIBUTFCPP})
-#add_dependencies(_LIBUTFCPP ${LIBUTFCPP_PRJ})
