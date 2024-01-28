@@ -60,3 +60,25 @@ jobs:
           test -f build/setup-librachive/deps/lib/libarchive.a
           test -f build/setup-librachive/deps/include/archive.h
           test -f build/setup-librachive/deps/include/archive_entry.h
+
+  test-setup-libutfcpp:
+    name: test setup-libutfcpp on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04, macos-11.0 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libutfcpp -DROOT=$PWD tests/setup-libutfcpp
+          cmake --build build/setup-libutfcpp
+
+      - name: Test setup-libutfcpp
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libutfcpp/deps/include/utf8.h
+          test -d build/setup-libutfcpp/deps/include/utf8
