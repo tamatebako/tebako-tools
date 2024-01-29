@@ -82,3 +82,24 @@ jobs:
           set -o errexit -o pipefail -o noclobber -o nounset
           test -f build/setup-libutfcpp/deps/include/utf8.h
           test -d build/setup-libutfcpp/deps/include/utf8
+
+  test-setup-libhowardhinnerdate:
+    name: test setup-libhowardhinnerdate on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04, macos-11.0 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libhowardhinnerdate -DROOT=$PWD tests/setup-libhowardhinnerdate
+          cmake --build build/setup-libhowardhinnerdate
+
+      - name: Test setup-libhowardhinnerdate
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libhowardhinnerdate/deps/include/date/date.h
