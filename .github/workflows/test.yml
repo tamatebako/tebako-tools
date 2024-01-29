@@ -1,0 +1,124 @@
+# Copyright (c) 2024, [Ribose Inc](https://www.ribose.com).
+# All rights reserved.
+# This file is a part of tebako
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+name: test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.job }}-${{ github.head_ref || github.ref_name }}'
+  cancel-in-progress: true
+
+jobs:
+  test-setup-librachive:
+    name: test setup-librachive on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04, macos-11.0 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-librachive -DROOT=$PWD tests/setup-librachive
+          cmake --build build/setup-librachive
+
+      - name: Test setup-librachive
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-librachive/deps/lib/pkgconfig/libarchive.pc
+          test -f build/setup-librachive/deps/lib/libarchive.so || test -f build/setup-librachive/deps/lib/libarchive.dylib
+          test -f build/setup-librachive/deps/lib/libarchive.a
+          test -f build/setup-librachive/deps/include/archive.h
+          test -f build/setup-librachive/deps/include/archive_entry.h
+
+  test-setup-libutfcpp:
+    name: test setup-libutfcpp on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04, macos-11.0 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libutfcpp -DROOT=$PWD tests/setup-libutfcpp
+          cmake --build build/setup-libutfcpp
+
+      - name: Test setup-libutfcpp
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libutfcpp/deps/include/utf8.h
+          test -d build/setup-libutfcpp/deps/include/utf8
+
+  test-setup-libhowardhinnerdate:
+    name: test setup-libhowardhinnerdate on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04, macos-11.0 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libhowardhinnerdate -DROOT=$PWD tests/setup-libhowardhinnerdate
+          cmake --build build/setup-libhowardhinnerdate
+
+      - name: Test setup-libhowardhinnerdate
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libhowardhinnerdate/deps/include/date/date.h
+
+  test-cross-brew-install:
+    name: test arm-brew-setup/install
+    runs-on: macos-11.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run arm-brew-setup
+        run: ci-scripts/arm-brew-setup.sh $PWD
+
+      - name: Run arm-brew-install
+        run: ci-scripts/arm-brew-install.sh $PWD glog
+
+      - name: Test
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f $PWD/arm-homebrew/lib/libgflags.dylib
+          test -f $PWD/arm-homebrew/lib/libglog.dylib

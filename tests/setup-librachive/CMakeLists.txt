@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2024, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -23,19 +23,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-name: lint
+cmake_minimum_required(VERSION 3.24.0)
+project(setup-librachive-test)
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-  workflow_dispatch:
+include(ExternalProject)
 
-jobs:
-  shellcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ludeeus/action-shellcheck@master
-        env:
-          SHELLCHECK_OPTS: -x
+set(ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set(DEPS ${CMAKE_CURRENT_BINARY_DIR}/deps)
+
+include(${ROOT}/cmake-scripts/def-external-project.cmake)
+include(${ROOT}/cmake-scripts/setup-libarchive.cmake)
