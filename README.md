@@ -1,4 +1,5 @@
 [![lint](https://github.com/tamatebako/macos-cross-compile/actions/workflows/lint.yml/badge.svg)](https://github.com/tamatebako/macos-cross-compile/actions/workflows/lint.yml)
+[![test](https://github.com/tamatebako/tebako-tools/actions/workflows/test.yml/badge.svg)](https://github.com/tamatebako/tebako-tools/actions/workflows/test.yml)
 
 ## Tebako portability tools ##
 
