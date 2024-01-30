@@ -39,7 +39,7 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.me
   set(OPENSSL_ROOT_DIR "${BREW_PREFIX}/opt/openssl@3")
   set(CMAKE_PREFIX_PATH "${BREW_PREFIX}")
-  include_directories("{OPENSSL_ROOT_DIR}/include")
+  include_directories("${OPENSSL_ROOT_DIR}/include")
   include_directories("${TARGET_BREW_PREFIX}/include")
 
   #  https://stackoverflow.com/questions/53877344/cannot-configure-cmake-to-look-for-homebrew-installed-version-of-bison
