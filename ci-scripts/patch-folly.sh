@@ -317,16 +317,6 @@ EOM
   sbst=" \/* tebako patched *\/ folly::portability::unistd::lseek(fd,"
   do_patch  "$1/folly/portability/SysUio.cpp" "$re" "$sbst"
 
-# --- folly/portability/Unistd.cpp ---
-  defined_win32_to_msc_ver "$1/folly/portability/Unistd.cpp"
-#  re="(lseek(fd,"
-#  sbst="( \/* tebako patched *\/ folly::portability::unistd::lseek(fd,"
-#  do_patch  "$1/folly/portability/Unistd.cpp" "$re" "$sbst"
-
-#  re="lseek(fd, 0,"
-#  sbst=" \/* tebako patched *\/ folly::portability::unistd::lseek(fd, 0,"
-#  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.cpp"
-
 # --- folly/logging/ImmediateFileWriter.h ---
   re="isatty(file"
   sbst=" \/* tebako patched *\/ folly::portability::unistd::isatty(file"
@@ -485,11 +475,19 @@ EOM
   sbst="T uninit = 0;  \/* tebako patched *\/"
   do_patch  "$1/folly/Utility.h" "$re" "$sbst"
 
-# --- folly/experimental/io/AsyncBase.h ---
+# --- folly/experimental/io/AsyncBase.cpp ---
   re="CHECK_ERR(close(pollFd_));"
   sbst="folly::portability::unistd::CHECK_ERR(close(pollFd_));  \/* tebako patched *\/"
-  do_patch  "$1/folly/experimental/io/AsyncBase.h" "$re" "$sbst"
+  do_patch  "$1/folly/experimental/io/AsyncBase.cpp" "$re" "$sbst"
 
+# --- folly/portability/Unistd.cpp ---
+  re="res = lseek64(fd, offset, whence);"
+  sbst="res = folly::portability::unistd::lseek64(fd, offset, whence); \/* tebako patched *\/ "
+  do_patch  "$1/folly/portability/Unistd.cpp" "$re" "$sbst"
+
+  re="res = lseek(fd, offset, whence);"
+  sbst="res = folly::portability::unistd::lseek(fd, offset, whence); \/* tebako patched *\/ "
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.cpp"
 # ---
 
   defined_msc_ver_to_win32 "$1/folly/external/farmhash/farmhash.cpp"
@@ -515,4 +513,5 @@ EOM
   defined_n_win32_to_msc_ver "$1/folly/portability/SysTime.h"
   defined_win32_to_msc_ver "$1/folly/portability/SysTime.cpp"
   defined_win32_to_msc_ver "$1/folly/lang/Exception.cpp"
+
 fi

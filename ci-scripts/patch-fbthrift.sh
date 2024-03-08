@@ -43,11 +43,6 @@ do_patch_multiline() {
   "$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
 }
 
-# ....................................................
-# Surprise, surprise ... Upstream project shall found boost libraries for fbthrift
-# https://github.com/facebook/fbthrift/commit/c23af9dee42374d43d2f10e0e07edf1c1c97c328
-
-
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" ]]; then
   gSed="sed"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
@@ -57,64 +52,8 @@ else
   exit 1
 fi
 
-#if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" ]]; then
-# shellcheck disable=SC2251
-#! IFS= read -r -d '' sbst << EOM
-#find_package(OpenSSL REQUIRED)
-# -- Start of tebako patch --
-#find_package(Boost 1.65 REQUIRED COMPONENTS filesystem)
-#include_directories(\${Boost_INCLUDE_DIRS})
-# -- End of tebako patch --
-#EOM
-
-#elif [[ "$OSTYPE" == "darwin"* ]]; then
-#  gSed="gsed"
-
-# shellcheck disable=SC2251
-#! IFS= read -r -d '' sbst << EOM
-#find_package(OpenSSL REQUIRED)
-# -- Start of tebako patch --
-#find_package(Boost 1.65 REQUIRED COMPONENTS filesystem)
-#include_directories(\${Boost_INCLUDE_DIRS})
-# Suppress superfluous randlib warnings about \"*.a\" having no symbols on MacOSX.
-#set(CMAKE_C_ARCHIVE_CREATE   \"<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>\")
-#set(CMAKE_CXX_ARCHIVE_CREATE \"<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>\")
-#set(CMAKE_C_ARCHIVE_FINISH   \"<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>\")
-#set(CMAKE_CXX_ARCHIVE_FINISH \"<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>\")
-# -- End of tebako patch --
-#EOM
-
-#else
-#  echo "Unknown OSTYPE=$OSTYPE"
-#  exit 1
-#fi
-
-#restore_and_save "$1/CMakeLists.txt"
-#re="find_package(OpenSSL REQUIRED)"
-#"$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMakeLists.txt"
-
-# GCC 13 compatibility
-# --- thrift/compiler/lib/cpp2/util.cc ---
-#re="#include <stdexcept>"
-# shellcheck disable=SC2251
-#! IFS= read -r -d '' sbst << EOM
-#include <stdexcept>
-
-#\/* -- Start of tebako patch -- *\/
-#include <cstdint>
-#\/* -- End of tebako patch -- *\/
-#EOM
-
-#do_patch_multiline "$1/thrift/compiler/lib/cpp2/util.cc"
-
-
 if [[ "$OSTYPE" == "msys" ]]; then
-#  re="if(WIN32)"
-#  sbst="if(MSVC) # tebako patched"
-#  do_patch "$1/thrift/compiler/CMakeLists.txt" "$re" "$sbst"
-
   re="ftruncate(file\.fd(), finalBufferSize);"
   sbst="folly::portability::unistd::ftruncate(file.fd(), finalBufferSize); \/* tebako patched *\/"
   do_patch "$1/thrift/lib/cpp2/frozen/FrozenUtil.h" "$re" "$sbst"
-
 fi
