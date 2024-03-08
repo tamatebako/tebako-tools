@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright (c) 2022-2023, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2022-2024, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -41,6 +41,7 @@ restore_and_save() {
 
 do_patch() {
   restore_and_save "$1"
+#  echo "$GNU_SED" -i "s/$2/$3/g" "$1"
   "$GNU_SED" -i "s/$2/$3/g" "$1"
 }
 
@@ -317,13 +318,14 @@ EOM
   do_patch  "$1/folly/portability/SysUio.cpp" "$re" "$sbst"
 
 # --- folly/portability/Unistd.cpp ---
-  re="(lseek(fd,"
-  sbst="( \/* tebako patched *\/ folly::portability::unistd::lseek(fd,"
-  do_patch  "$1/folly/portability/Unistd.cpp" "$re" "$sbst"
+  defined_win32_to_msc_ver "$1/folly/portability/Unistd.cpp"
+#  re="(lseek(fd,"
+#  sbst="( \/* tebako patched *\/ folly::portability::unistd::lseek(fd,"
+#  do_patch  "$1/folly/portability/Unistd.cpp" "$re" "$sbst"
 
-  re="lseek(fd, 0,"
-  sbst=" \/* tebako patched *\/ folly::portability::unistd::lseek(fd, 0,"
-  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.cpp"
+#  re="lseek(fd, 0,"
+#  sbst=" \/* tebako patched *\/ folly::portability::unistd::lseek(fd, 0,"
+#  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.cpp"
 
 # --- folly/logging/ImmediateFileWriter.h ---
   re="isatty(file"
@@ -402,6 +404,7 @@ EOM
 #ifdef __MINGW32__
   #include <mswsock.h>
   using cmsghdr = WSACMSGHDR;
+  #define CMSG_SPACE WSA_CMSG_SPACE
 #endif
 \/* -- End of tebako patch -- *\/
 
@@ -448,7 +451,47 @@ EOM
   sbst="#if defined(__XROS__) || defined(__MINGW32__) \/* tebako patched *\/"
   "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/system/ThreadName.cpp"
 
+# --- folly/net/NetOps.h ---
+
+  re="#include <WS2tcpip\.h> \/\/ @manual"
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+#include <WS2tcpip.h> \/\/ @manual
+
+\/* -- Start of tebako patch -- *\/
+#ifdef __MINGW32__
+  #include <memory>
+  #include <mswsock.h>
+#endif
+\/* -- End of tebako patch -- *\/
+EOM
+  do_patch_multiline  "$1/folly/net/NetOps.h" "$re" "$sbst"
+
+# --- folly/Random.cpp ---
+
+  re="#include <folly\/synchronization\/RelaxedAtomic\.h>"
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+#include <folly\/synchronization\/RelaxedAtomic.h>
+
+\/* -- Start of tebako patch -- *\/
+#include <folly\/portability\/Fcntl.h>
+\/* -- End of tebako patch -- *\/
+EOM
+  do_patch_multiline  "$1/folly/Random.cpp" "$re" "$sbst"
+
+# --- folly/Utility.h ---
+  re="T uninit;"
+  sbst="T uninit = 0;  \/* tebako patched *\/"
+  do_patch  "$1/folly/Utility.h" "$re" "$sbst"
+
+# --- folly/experimental/io/AsyncBase.h ---
+  re="CHECK_ERR(close(pollFd_));"
+  sbst="folly::portability::unistd::CHECK_ERR(close(pollFd_));  \/* tebako patched *\/"
+  do_patch  "$1/folly/experimental/io/AsyncBase.h" "$re" "$sbst"
+
 # ---
+
   defined_msc_ver_to_win32 "$1/folly/external/farmhash/farmhash.cpp"
   defined_msc_ver_to_win32 "$1/folly/detail/IPAddressSource.h"
   defined_msc_ver_to_win32 "$1/folly/portability/Sockets.cpp"
@@ -471,5 +514,5 @@ EOM
 # while gettimeofday is provided by MSys, the other two functions are lost
   defined_n_win32_to_msc_ver "$1/folly/portability/SysTime.h"
   defined_win32_to_msc_ver "$1/folly/portability/SysTime.cpp"
-
+  defined_win32_to_msc_ver "$1/folly/lang/Exception.cpp"
 fi
