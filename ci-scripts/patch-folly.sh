@@ -477,7 +477,7 @@ EOM
 
 # --- folly/experimental/io/AsyncBase.cpp ---
   re="CHECK_ERR(close(pollFd_));"
-  sbst="folly::portability::unistd::CHECK_ERR(close(pollFd_));  \/* tebako patched *\/"
+  sbst="CHECK_ERR(folly::portability::unistd::close(pollFd_));  \/* tebako patched *\/"
   do_patch  "$1/folly/experimental/io/AsyncBase.cpp" "$re" "$sbst"
 
 # --- folly/portability/Unistd.cpp ---
