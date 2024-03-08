@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright (c) 2022, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2022,2024 [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -50,60 +50,68 @@ do_patch_multiline() {
 
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" ]]; then
   gSed="sed"
-# shellcheck disable=SC2251
-! IFS= read -r -d '' sbst << EOM
-find_package(OpenSSL REQUIRED)
-# -- Start of tebako patch --
-find_package(Boost 1.65 REQUIRED COMPONENTS filesystem)
-include_directories(\${Boost_INCLUDE_DIRS})
-# -- End of tebako patch --
-EOM
-
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   gSed="gsed"
-
-# shellcheck disable=SC2251
-! IFS= read -r -d '' sbst << EOM
-find_package(OpenSSL REQUIRED)
-# -- Start of tebako patch --
-find_package(Boost 1.65 REQUIRED COMPONENTS filesystem)
-include_directories(\${Boost_INCLUDE_DIRS})
-# Suppress superfluous randlib warnings about \"*.a\" having no symbols on MacOSX.
-set(CMAKE_C_ARCHIVE_CREATE   \"<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>\")
-set(CMAKE_CXX_ARCHIVE_CREATE \"<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>\")
-set(CMAKE_C_ARCHIVE_FINISH   \"<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>\")
-set(CMAKE_CXX_ARCHIVE_FINISH \"<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>\")
-# -- End of tebako patch --
-EOM
-
 else
   echo "Unknown OSTYPE=$OSTYPE"
   exit 1
 fi
 
-restore_and_save "$1/CMakeLists.txt"
-re="find_package(OpenSSL REQUIRED)"
-"$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMakeLists.txt"
+#if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" ]]; then
+# shellcheck disable=SC2251
+#! IFS= read -r -d '' sbst << EOM
+#find_package(OpenSSL REQUIRED)
+# -- Start of tebako patch --
+#find_package(Boost 1.65 REQUIRED COMPONENTS filesystem)
+#include_directories(\${Boost_INCLUDE_DIRS})
+# -- End of tebako patch --
+#EOM
+
+#elif [[ "$OSTYPE" == "darwin"* ]]; then
+#  gSed="gsed"
+
+# shellcheck disable=SC2251
+#! IFS= read -r -d '' sbst << EOM
+#find_package(OpenSSL REQUIRED)
+# -- Start of tebako patch --
+#find_package(Boost 1.65 REQUIRED COMPONENTS filesystem)
+#include_directories(\${Boost_INCLUDE_DIRS})
+# Suppress superfluous randlib warnings about \"*.a\" having no symbols on MacOSX.
+#set(CMAKE_C_ARCHIVE_CREATE   \"<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>\")
+#set(CMAKE_CXX_ARCHIVE_CREATE \"<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>\")
+#set(CMAKE_C_ARCHIVE_FINISH   \"<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>\")
+#set(CMAKE_CXX_ARCHIVE_FINISH \"<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>\")
+# -- End of tebako patch --
+#EOM
+
+#else
+#  echo "Unknown OSTYPE=$OSTYPE"
+#  exit 1
+#fi
+
+#restore_and_save "$1/CMakeLists.txt"
+#re="find_package(OpenSSL REQUIRED)"
+#"$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1/CMakeLists.txt"
 
 # GCC 13 compatibility
 # --- thrift/compiler/lib/cpp2/util.cc ---
-re="#include <stdexcept>"
+#re="#include <stdexcept>"
 # shellcheck disable=SC2251
-! IFS= read -r -d '' sbst << EOM
+#! IFS= read -r -d '' sbst << EOM
 #include <stdexcept>
 
-\/* -- Start of tebako patch -- *\/
+#\/* -- Start of tebako patch -- *\/
 #include <cstdint>
-\/* -- End of tebako patch -- *\/
-EOM
+#\/* -- End of tebako patch -- *\/
+#EOM
 
-do_patch_multiline "$1/thrift/compiler/lib/cpp2/util.cc"
+#do_patch_multiline "$1/thrift/compiler/lib/cpp2/util.cc"
 
 
 if [[ "$OSTYPE" == "msys" ]]; then
-  re="if(WIN32)"
-  sbst="if(MSVC) # tebako patched"
-  do_patch "$1/thrift/compiler/CMakeLists.txt" "$re" "$sbst"
+#  re="if(WIN32)"
+#  sbst="if(MSVC) # tebako patched"
+#  do_patch "$1/thrift/compiler/CMakeLists.txt" "$re" "$sbst"
 
   re="ftruncate(file\.fd(), finalBufferSize);"
   sbst="folly::portability::unistd::ftruncate(file.fd(), finalBufferSize); \/* tebako patched *\/"
