@@ -53,7 +53,7 @@ else
 fi
 
 if [[ "$OSTYPE" == "msys" ]]; then
-  re="ftruncate(file\.fd(), finalBufferSize);"
-  sbst="folly::portability::unistd::ftruncate(file.fd(), finalBufferSize); \/* tebako patched *\/"
+  re="ftruncate(file\.fd(), finalBufferSize),"
+  sbst="folly::portability::unistd::ftruncate(file.fd(), finalBufferSize), \/* tebako patched *\/"
   do_patch "$1/thrift/lib/cpp2/frozen/FrozenUtil.h" "$re" "$sbst"
 fi
