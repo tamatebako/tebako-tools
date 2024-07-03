@@ -26,17 +26,17 @@
 
 if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
 
-  function(find_and_set_homebrew_prefix package_name executable_name)
+  function(find_and_set_homebrew_prefix package_name pkg_name executable_name)
     execute_process(
       COMMAND brew --prefix ${package_name}
-      RESULT_VARIABLE BREW_${package_name}_RESULT
-      OUTPUT_VARIABLE BREW_${package_name}_PREFIX_TMP
+      RESULT_VARIABLE BREW_${pkg_name}_RESULT
+      OUTPUT_VARIABLE BREW_${pkg_name}_PREFIX_TMP
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    if (BREW_${package_name}_RESULT EQUAL 0 AND EXISTS "${BREW_${package_name}_PREFIX_TMP}")
-      set(BREW_${package_name}_PREFIX "${BREW_${package_name}_PREFIX_TMP}" CACHE PATH "${package_name} prefix")
-      message(STATUS "Found ${package_name} keg installed by Homebrew at ${BREW_${package_name}_PREFIX}")
-      set(${executable_name} "${BREW_${package_name}_PREFIX}/bin/${package_name}" CACHE FILEPATH "${executable_name} executable")
+    if (BREW_${pkg_name}_RESULT EQUAL 0 AND EXISTS "${BREW_${pkg_name}_PREFIX_TMP}")
+      set(BREW_${pkg_name}_PREFIX "${BREW_${pkg_name}_PREFIX_TMP}" CACHE PATH "${package_name} prefix")
+      message(STATUS "Found ${package_name} keg installed by Homebrew at ${BREW_${pkg_name}_PREFIX}")
+      set(${executable_name} "${BREW_${pkg_name}_PREFIX}/bin/${package_name}" CACHE FILEPATH "${executable_name} executable")
     endif()
   endfunction()
 
@@ -61,9 +61,9 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   include_directories("${BREW_PREFIX}/include")
 
   #  https://stackoverflow.com/questions/53877344/cannot-configure-cmake-to-look-for-homebrew-installed-version-of-bison
-  find_and_set_homebrew_prefix("bison" "BISON_EXECUTABLE")
-  find_and_set_homebrew_prefix("flex" "FLEX_EXECUTABLE")
-  find_and_set_homebrew_prefix("bash" "GNU_BASH")
+  find_and_set_homebrew_prefix("bison" "BISON" "BISON_EXECUTABLE")
+  find_and_set_homebrew_prefix("flex" "FLEX" "FLEX_EXECUTABLE")
+  find_and_set_homebrew_prefix("bash" "BASH" "GNU_BASH")
 
 # Suppress superfluous randlib warnings about "*.a" having no symbols on MacOSX.
   set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
