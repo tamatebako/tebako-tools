@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-11.0 ]
+        os: [ ubuntu-20.04, macos-12 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-11.0 ]
+        os: [ ubuntu-20.04, macos-12 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,7 +89,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-11.0 ]
+        os: [ ubuntu-20.04, macos-12 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,7 +106,7 @@ jobs:
 
   test-cross-brew-install:
     name: test arm-brew-setup/install
-    runs-on: macos-11.0
+    runs-on: macos-12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -122,3 +122,24 @@ jobs:
           set -o errexit -o pipefail -o noclobber -o nounset
           test -f $PWD/arm-homebrew/lib/libgflags.dylib
           test -f $PWD/arm-homebrew/lib/libglog.dylib
+
+  test-macos-environment-script:
+    name: test macos-environment.cmake on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-12, macos-13, macos-14 ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install packages
+        run: brew install flex bison bash
+
+      - name: Run CMake test
+        run: cmake -B test.build -S tests/cmake
