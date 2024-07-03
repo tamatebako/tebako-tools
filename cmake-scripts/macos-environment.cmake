@@ -25,6 +25,22 @@
 #
 
 if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+
+  function(find_and_set_homebrew_prefix package_name executable_name)
+    execute_process(
+      COMMAND brew --prefix ${package_name}
+      RESULT_VARIABLE BREW_${package_name}_RESULT
+      OUTPUT_VARIABLE BREW_${package_name}_PREFIX_TMP
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if (BREW_${package_name}_RESULT EQUAL 0 AND EXISTS "${BREW_${package_name}_PREFIX_TMP}")
+      set(BREW_${package_name}_PREFIX "${BREW_${package_name}_PREFIX_TMP}" CACHE PATH "${package_name} prefix")
+      message(STATUS "Found ${package_name} keg installed by Homebrew at ${BREW_${package_name}_PREFIX}")
+      set(${executable_name} "${BREW_${package_name}_PREFIX}/bin/${package_name}" CACHE FILEPATH "${executable_name} executable")
+    endif()
+  endfunction()
+
+
   execute_process(
     COMMAND brew --prefix
     RESULT_VARIABLE BREW_PREFIX_RES
@@ -34,7 +50,7 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   if(NOT (BREW_PREFIX_RES EQUAL 0 AND EXISTS ${BREW_PREFIX_TMP}))
     message(FATAL "Could not find build brew setup")
   else()
-    set(BREW_PREFIX "${BREW_PREFIX_TMP}") # CACHE PATH "Brew installation prefix")
+    set(BREW_PREFIX "${BREW_PREFIX_TMP}" CACHE PATH "Brew installation prefix")
   endif()
 
   message(STATUS "Using brew environment at ${BREW_PREFIX}")
@@ -45,41 +61,9 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   include_directories("${BREW_PREFIX}/include")
 
   #  https://stackoverflow.com/questions/53877344/cannot-configure-cmake-to-look-for-homebrew-installed-version-of-bison
-  execute_process(
-    COMMAND brew --prefix bison
-    RESULT_VARIABLE BREW_BISON
-    OUTPUT_VARIABLE BREW_BISON_PREFIX_TMP
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  if (BREW_BISON EQUAL 0 AND EXISTS "${BREW_BISON_PREFIX_TMP}")
-    set(BREW_BISON_PREFIX "${BREW_BISON_PREFIX_TMP}" CACHE PATH "Bison prefix")
-    message(STATUS "Found Bison keg installed by Homebrew at ${BREW_BISON_PREFIX}")
-    set(BISON_EXECUTABLE "${BREW_BISON_PREFIX}/bin/bison" CACHE FILEPATH "Bison executable")
-  endif()
-
-  execute_process(
-    COMMAND brew --prefix flex
-    RESULT_VARIABLE BREW_FLEX
-    OUTPUT_VARIABLE BREW_FLEX_PREFIX_TMP
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  if (BREW_FLEX EQUAL 0 AND EXISTS "${BREW_FLEX_PREFIX_TMP}")
-  set(BREW_FLEX_PREFIX "${BREW_FLEX_PREFIX_TMP}" CACHE PATH "Flex prefix")
-    message(STATUS "Found Flex keg installed by Homebrew at ${BREW_FLEX_PREFIX}")
-    set(FLEX_EXECUTABLE "${BREW_FLEX_PREFIX}/bin/flex" CACHE FILEPATH "Flex executable")
-  endif()
-
-  execute_process(
-    COMMAND brew --prefix bash
-    RESULT_VARIABLE BREW_BASH
-    OUTPUT_VARIABLE BREW_BASH_PREFIX_TMP
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  if (BREW_BASH EQUAL 0 AND EXISTS "${BREW_BASH_PREFIX_TMP}")
-    set(BREW_BASH_PREFIX "${BREW_BASH_PREFIX_TMP}" CACHE PATH "Bash prefix")
-    message(STATUS "Found GNU bash keg installed by Homebrew at ${BREW_BASH_PREFIX}")
-    set(GNU_BASH "${BREW_BASH_PREFIX}/bin/bash" CACHE FILEPATH "Bash executable")
-  endif()
+  find_and_set_homebrew_prefix("bison" "BISON_EXECUTABLE")
+  find_and_set_homebrew_prefix("flex" "FLEX_EXECUTABLE")
+  find_and_set_homebrew_prefix("bash" "GNU_BASH")
 
 # Suppress superfluous randlib warnings about "*.a" having no symbols on MacOSX.
   set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
