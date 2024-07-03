@@ -34,7 +34,7 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   if(NOT (BREW_PREFIX_RES EQUAL 0 AND EXISTS ${BREW_PREFIX_TMP}))
     message(FATAL "Could not find build brew setup")
   else()
-    set(BREW_PREFIX "${BREW_PREFIX_TMP}" CACHE PATH "Brew installation prefix")
+    set(BREW_PREFIX "${BREW_PREFIX_TMP}") # CACHE PATH "Brew installation prefix")
   endif()
 
   message(STATUS "Using brew environment at ${BREW_PREFIX}")
