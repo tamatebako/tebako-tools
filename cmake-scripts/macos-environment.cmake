@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2021-2024, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tamatebako
 #
@@ -28,11 +28,13 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   execute_process(
     COMMAND brew --prefix
     RESULT_VARIABLE BREW_PREFIX_RES
-    OUTPUT_VARIABLE BREW_PREFIX
+    OUTPUT_VARIABLE BREW_PREFIX_TMP
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  if(NOT (BREW_PREFIX_RES EQUAL 0 AND EXISTS ${BREW_PREFIX}))
+  if(NOT (BREW_PREFIX_RES EQUAL 0 AND EXISTS ${BREW_PREFIX_TMP}))
     message(FATAL "Could not find build brew setup")
+  else()
+    set(BREW_PREFIX "${BREW_PREFIX_TMP}" CACHE PATH "Brew installation prefix")
   endif()
 
   message(STATUS "Using brew environment at ${BREW_PREFIX}")
@@ -40,40 +42,43 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   set(OPENSSL_ROOT_DIR "${BREW_PREFIX}/opt/openssl@3")
   set(CMAKE_PREFIX_PATH "${BREW_PREFIX}")
   include_directories("${OPENSSL_ROOT_DIR}/include")
-  include_directories("${TARGET_BREW_PREFIX}/include")
+  include_directories("${BREW_PREFIX}/include")
 
   #  https://stackoverflow.com/questions/53877344/cannot-configure-cmake-to-look-for-homebrew-installed-version-of-bison
   execute_process(
     COMMAND brew --prefix bison
     RESULT_VARIABLE BREW_BISON
-    OUTPUT_VARIABLE BREW_BISON_PREFIX
+    OUTPUT_VARIABLE BREW_BISON_PREFIX_TMP
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  if (BREW_BISON EQUAL 0 AND EXISTS "${BREW_BISON_PREFIX}")
+  if (BREW_BISON EQUAL 0 AND EXISTS "${BREW_BISON_PREFIX_TMP}")
+    set(BREW_BISON_PREFIX "${BREW_BISON_PREFIX_TMP}" CACHE PATH "Bison prefix")
     message(STATUS "Found Bison keg installed by Homebrew at ${BREW_BISON_PREFIX}")
-    set(BISON_EXECUTABLE "${BREW_BISON_PREFIX}/bin/bison")
+    set(BISON_EXECUTABLE "${BREW_BISON_PREFIX}/bin/bison" CACHE FILEPATH "Bison executable")
   endif()
 
   execute_process(
     COMMAND brew --prefix flex
     RESULT_VARIABLE BREW_FLEX
-    OUTPUT_VARIABLE BREW_FLEX_PREFIX
+    OUTPUT_VARIABLE BREW_FLEX_PREFIX_TMP
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
   if (BREW_FLEX EQUAL 0 AND EXISTS "${BREW_FLEX_PREFIX}")
+  set(BREW_FLEX_PREFIX "${BREW_FLEX_PREFIX_TMP}" CACHE PATH "Flex prefix")
     message(STATUS "Found Flex keg installed by Homebrew at ${BREW_FLEX_PREFIX}")
-    set(FLEX_EXECUTABLE "${BREW_FLEX_PREFIX}/bin/flex")
+    set(FLEX_EXECUTABLE "${BREW_FLEX_PREFIX}/bin/flex" CACHE FILEPATH "Flex executable")
   endif()
 
   execute_process(
     COMMAND brew --prefix bash
     RESULT_VARIABLE BREW_BASH
-    OUTPUT_VARIABLE BREW_BASH_PREFIX
+    OUTPUT_VARIABLE BREW_BASH_PREFIX_TMP
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
   if (BREW_BASH EQUAL 0 AND EXISTS "${BREW_BASH_PREFIX}")
+    set(BREW_BASH_PREFIX "${BREW_BASH_PREFIX_TMP}" CACHE PATH "Bash prefix")
     message(STATUS "Found GNU bash keg installed by Homebrew at ${BREW_BASH_PREFIX}")
-    set(GNU_BASH "${BREW_BASH_PREFIX}/bin/bash")
+    set(GNU_BASH "${BREW_BASH_PREFIX}/bin/bash" CACHE FILEPATH "Bash executable")
   endif()
 
 # Suppress superfluous randlib warnings about "*.a" having no symbols on MacOSX.
