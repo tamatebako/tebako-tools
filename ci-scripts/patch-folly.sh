@@ -475,11 +475,6 @@ EOM
   sbst="T uninit = 0;  \/* tebako patched *\/"
   do_patch  "$1/folly/Utility.h" "$re" "$sbst"
 
-# --- folly/io/async/AsyncBase.cpp ---
-#  re="CHECK_ERR(close(pollFd_));"
-#  sbst="CHECK_ERR(folly::portability::unistd::close(pollFd_));  \/* tebako patched *\/"
-#  do_patch  "$1/folly/io/async/AsyncBase.cpp" "$re" "$sbst"
-
 # --- folly/portability/Unistd.cpp ---
   re="res = lseek64(fd, offset, whence);"
   sbst="res = folly::portability::unistd::lseek64(fd, offset, whence); \/* tebako patched *\/ "
@@ -488,8 +483,13 @@ EOM
   re="res = lseek(fd, offset, whence);"
   sbst="res = folly::portability::unistd::lseek(fd, offset, whence); \/* tebako patched *\/ "
   "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/portability/Unistd.cpp"
-# ---
 
+# --- folly/io/async/AsyncUDPSocket.cpp
+  re="#elif _WIN32"
+  sbst="#elif _MSC_VER \/* tebako patched *\/ "
+  do_patch  "$1/folly/io/async/AsyncUDPSocket.cpp" "$re" "$sbst"
+
+# ---
   defined_msc_ver_to_win32 "$1/folly/external/farmhash/farmhash.cpp"
   defined_msc_ver_to_win32 "$1/folly/detail/IPAddressSource.h"
   defined_msc_ver_to_win32 "$1/folly/portability/Sockets.cpp"
