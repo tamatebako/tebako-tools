@@ -146,7 +146,7 @@ if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
   re="#elif defined(__FreeBSD__)"
   sbst="#elif defined(__FreeBSD__) || defined(__musl__)  \/* Tebako patched *\/"
-  do_patch "$1/folly/experimental/symbolizer/Elf.cpp" "$re" "$sbst"
+  do_patch "$1/folly/debugging/symbolizer/Elf.cpp" "$re" "$sbst"
 
   restore_and_save "$1/CMake/FollyConfigChecks.cmake"
   re="FOLLY_HAVE_IFUNC"
@@ -289,23 +289,23 @@ EOM
   sbst="(\/* tebako patched *\/ folly::portability::unistd::dup2,"
   "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/FileUtil.cpp"
 
-# --- folly/experimental/TestUtil.cpp ---
-  defined_win32_to_msc_ver "$1/folly/experimental/TestUtil.cpp"
+# --- folly/testing/TestUtil.cpp ---
+  defined_win32_to_msc_ver "$1/folly/testing/TestUtil.cpp"
   re="dup("
   sbst="\/* tebako patched *\/ folly::portability::unistd::dup("
-  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/testing/TestUtil.cpp"
 
   re="dup2("
   sbst="\/* tebako patched *\/ folly::portability::unistd::dup2("
-  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/testing/TestUtil.cpp"
 
   re="lseek("
   sbst="\/* tebako patched *\/ folly::portability::unistd::lseek("
-  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/testing/TestUtil.cpp"
 
   re="(close("
   sbst="(\/* tebako patched *\/ folly::portability::unistd::close("
-  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/experimental/TestUtil.cpp"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1/folly/testing/TestUtil.cpp"
 
 # --- folly/system/MemoryMapping.cpp ---
   re="0 == ftruncate("
@@ -475,10 +475,10 @@ EOM
   sbst="T uninit = 0;  \/* tebako patched *\/"
   do_patch  "$1/folly/Utility.h" "$re" "$sbst"
 
-# --- folly/experimental/io/AsyncBase.cpp ---
-  re="CHECK_ERR(close(pollFd_));"
-  sbst="CHECK_ERR(folly::portability::unistd::close(pollFd_));  \/* tebako patched *\/"
-  do_patch  "$1/folly/experimental/io/AsyncBase.cpp" "$re" "$sbst"
+# --- folly/io/async/AsyncBase.cpp ---
+#  re="CHECK_ERR(close(pollFd_));"
+#  sbst="CHECK_ERR(folly::portability::unistd::close(pollFd_));  \/* tebako patched *\/"
+#  do_patch  "$1/folly/io/async/AsyncBase.cpp" "$re" "$sbst"
 
 # --- folly/portability/Unistd.cpp ---
   re="res = lseek64(fd, offset, whence);"
