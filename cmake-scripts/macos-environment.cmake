@@ -68,8 +68,14 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
 # Suppress superfluous randlib warnings about "*.a" having no symbols on MacOSX.
   set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
   set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
-  set(CMAKE_C_ARCHIVE_FINISH   "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
-  set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+
+  if (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+    set(CMAKE_C_ARCHIVE_FINISH   "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+  endif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+  endif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
   set(CMAKE_CXX_FLAGS "-DTARGET_OS_SIMULATOR=0 -DTARGET_OS_IPHONE=0")
 
