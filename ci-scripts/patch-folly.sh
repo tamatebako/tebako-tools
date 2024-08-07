@@ -70,6 +70,12 @@ defined_n_win32_to_msc_ver() {
   "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
+defined_el_win32_to_msc_ver() {
+  re="#elif _WIN32"
+  sbst="#elif _MSC_VER \/* tebako patched *\/ "
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
+}
+
 defined_msc_ver_to_win32() {
   re="defined(_MSC_VER)"
   sbst="defined(_WIN32) \/* tebako patched *\/ "
@@ -514,4 +520,5 @@ EOM
   defined_win32_to_msc_ver "$1/folly/portability/SysTime.cpp"
   defined_win32_to_msc_ver "$1/folly/lang/Exception.cpp"
 
+  defined_el_win32_to_msc_ver "$1/folly/io/async/AsyncUDPSocket.cpp"
 fi
