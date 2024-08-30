@@ -36,13 +36,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test-setup-libfmt:
+    name: test setup-libfmt on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04, macos-12, macos-14 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libfmt -DROOT=$PWD tests/setup-libfmt
+          cmake --build build/setup-libfmt
+
+      - name: Test setup-libfmt
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libfmt/deps/lib/libfmt.a
+          test -f build/setup-libfmt/deps/include/fmt/args.h
+          test -f build/setup-libfmt/deps/include/fmt/chrono.h
+          test -f build/setup-libfmt/deps/include/fmt/color.h
+          test -f build/setup-libfmt/deps/include/fmt/compile.h
+          test -f build/setup-libfmt/deps/include/fmt/core.h
+          test -f build/setup-libfmt/deps/include/fmt/format.h
+          test -f build/setup-libfmt/deps/include/fmt/format-inl.h
+          test -f build/setup-libfmt/deps/include/fmt/os.h
+          test -f build/setup-libfmt/deps/include/fmt/ostream.h
+          test -f build/setup-libfmt/deps/include/fmt/printf.h
+          test -f build/setup-libfmt/deps/include/fmt/ranges.h
+          test -f build/setup-libfmt/deps/include/fmt/std.h
+          test -f build/setup-libfmt/deps/include/fmt/xchar.h
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-config.cmake
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-config-version.cmake
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-targets.cmake
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-targets-release.cmake
+          test -f build/setup-libfmt/deps/lib/pkgconfig/fmt.pc 
+
   test-setup-librachive:
     name: test setup-librachive on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-12 ]
+        os: [ ubuntu-20.04, macos-12, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,7 +106,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-12 ]
+        os: [ ubuntu-20.04, macos-12, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
