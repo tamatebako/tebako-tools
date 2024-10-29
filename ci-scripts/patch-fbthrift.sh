@@ -60,4 +60,16 @@ if [[ "$OSTYPE" == "msys" ]]; then
   re="if (detail::platform_is_windows()) {"
   sbst="if (false) { \/* tebako patched *\/"
   do_patch "$1/thrift/compiler/source_location.cc" "$re" "$sbst"
+
+  re="#include <fmt/fmt-format.h>"
+ # shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+#include <fmt/fmt-format.h>
+
+\/* -- Start of tebako patch -- *\/
+#include <fmt/fmt-ranges.h>
+\/* -- End of tebako patch -- *\/
+EOM
+do_patch_multiline "$1/thrift/compiler/lib/cpp2/util.h" "$re" "$sbst"
+
 fi
