@@ -66,6 +66,7 @@ if [[ "$OSTYPE" == "msys" ]]; then
  # shellcheck disable=SC2251
 ! IFS= read -r -d '' sbst << EOM
 #include <fmt\/format.h>
+
 \/* -- Start of tebako patch -- *\/
 #include <fmt\/ranges.h>
 \/* -- End of tebako patch -- *\/
