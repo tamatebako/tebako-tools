@@ -74,5 +74,6 @@ EOM
 
 do_patch_multiline "$1/thrift/compiler/lib/cpp2/util.h" "$re" "$sbst"
 do_patch_multiline "$1/thrift/compiler/gen/cpp/namespace_resolver.cc" "$re" "$sbst"
+do_patch_multiline "$1/thrift/compiler/ast/t_const_value.h" "$re" "$sbst"
 
 fi
