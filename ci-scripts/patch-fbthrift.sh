@@ -64,12 +64,15 @@ if [[ "$OSTYPE" == "msys" ]]; then
   re="#include <fmt\/fmt-format\.h>"
  # shellcheck disable=SC2251
 ! IFS= read -r -d '' sbst << EOM
-#include <fmt/fmt-format.h>
+#include <fmt\/format.h>
 
 \/* -- Start of tebako patch -- *\/
 #include <fmt\/fmt-ranges.h>
 \/* -- End of tebako patch -- *\/
 EOM
+
 do_patch_multiline "$1/thrift/compiler/lib/cpp2/util.h" "$re" "$sbst"
+do_patch_multiline "$1/thrift/compiler/gen/cpp/namespace_resolver.cc" "$re" "$sbst"
+do_patch_multiline "$1/thrift/compiler/ast/t_const_value.h" "$re" "$sbst"
 
 fi

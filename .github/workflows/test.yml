@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-12, macos-14 ]
+        os: [ ubuntu-20.04, macos-13, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,7 +73,7 @@ jobs:
           test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-config-version.cmake
           test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-targets.cmake
           test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-targets-release.cmake
-          test -f build/setup-libfmt/deps/lib/pkgconfig/fmt.pc 
+          test -f build/setup-libfmt/deps/lib/pkgconfig/fmt.pc
 
   test-setup-librachive:
     name: test setup-librachive on ${{ matrix.os }}
@@ -81,7 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-12, macos-14 ]
+        os: [ ubuntu-20.04, macos-13, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,7 +106,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-12, macos-14 ]
+        os: [ ubuntu-20.04, macos-13, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -128,7 +128,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-12 ]
+        os: [ ubuntu-20.04, macos-13 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -168,7 +168,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-12, macos-13, macos-14 ]
+        os: [ macos-13, macos-14 ]
 
     steps:
       - name: Checkout
