@@ -201,7 +201,7 @@ EOM
   sbst="set(OPENSSL_INCLUDE_DIR \"\${OPENSSL_ROOT_DIR}\/include\")    # tebako patched"
   "$GNU_SED" -i "s/$re/$sbst/g" "$1/CMakeLists.txt"
 
-elif [[ "$OSTYPE" == "msys"* ]]; then
+elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
 # --- folly/portability/Stdlib.h ---
   re="#define PATH_MAX _MAX_PATH"
   sbst="\/* #define PATH_MAX _MAX_PATH --- tebako patched *\/"

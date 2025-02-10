@@ -43,7 +43,7 @@ do_patch_multiline() {
   "$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
 }
 
-if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" ]]; then
+if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
   gSed="sed"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   gSed="gsed"
@@ -52,7 +52,7 @@ else
   exit 1
 fi
 
-if [[ "$OSTYPE" == "msys" ]]; then
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
   re="ftruncate(file\.fd(), finalBufferSize),"
   sbst="folly::portability::unistd::ftruncate(file.fd(), finalBufferSize), \/* tebako patched *\/"
   do_patch "$1/thrift/lib/cpp2/frozen/FrozenUtil.h" "$re" "$sbst"
