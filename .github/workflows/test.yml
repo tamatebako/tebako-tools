@@ -182,3 +182,29 @@ jobs:
 
       - name: Run CMake test
         run: cmake -B test.build -S tests/cmake
+
+  test-setup-openssl-alpine:
+    name: test openssl 1.1.1 setup on alpine
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:3.17
+
+    steps:
+      - name: Install packages
+        run: |
+          apk --no-cache --upgrade add git bash cmake make build-base autoconf binutils-dev linux-headers
+          git config --global --add safe.directory $PWD
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-openssl tests/setup-openssl
+          cmake --build build/setup-openssl
+
+      - name: Test
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          v=$(LD_LIBRARY_PATH="$PWD/build/setup-openssl/deps/lib":%LD_LIBRARY_PATH% build/setup-openssl/deps/bin/openssl version)
+          [ "$v" = "OpenSSL 1.1.1w  11 Sep 2023" ]

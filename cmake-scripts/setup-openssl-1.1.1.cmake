@@ -1,4 +1,4 @@
-# Copyright (c) 2023 [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2023-2025 [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -66,4 +66,30 @@ if(WITH_OPENSSL_BUILD)
       set(WITH_OPENSSL_BUILD OFF)
     endif((${OPENSSL_VER} VERSION_GREATER_EQUAL "1.1.0") AND (${OPENSSL_VER} VERSION_LESS "3.0.0"))
   endif(OPENSSL_RES EQUAL 0)
+endif(WITH_OPENSSL_BUILD)
+
+if(WITH_OPENSSL_BUILD)
+  message(STATUS "Building OpenSSL 1.1.1w")
+  def_ext_prj_g(OPENSSL "OpenSSL_1_1_1w")
+
+  set(__LIBSSL "${DEPS}/lib/libssl.a")
+  set(__LIBCRYPTO "${DEPS}/lib/libcrypto.a")
+
+  ExternalProject_Add(${OPENSSL_PRJ}
+    PREFIX ${DEPS}
+    GIT_REPOSITORY "https://github.com/openssl/openssl.git"
+    GIT_TAG ${OPENSSL_TAG}
+    UPDATE_COMMAND ""
+    SOURCE_DIR ${OPENSSL_SOURCE_DIR}
+    BINARY_DIR ${OPENSSL_BINARY_DIR}
+    CONFIGURE_COMMAND   ${GNU_BASH} -c "${OPENSSL_SOURCE_DIR}/config          \
+                                                        --openssldir=${DEPS}  \
+                                                        --prefix=${DEPS}"
+    BUILD_BYPRODUCTS ${__LIBSSL} ${__LIBCRYPTO}
+  )
+
+else(WITH_OPENSSL_BUILD)
+  find_library(_LIBSSL "libssl.a" REQUIRED HINTS ${DEPS}/lib)
+  find_library(_LIBCRYPTO "libcrypto.a" REQUIRED HINTS ${DEPS}/lib)
+
 endif(WITH_OPENSSL_BUILD)
