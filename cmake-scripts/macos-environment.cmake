@@ -55,7 +55,10 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
 
   message(STATUS "Using brew environment at ${BREW_PREFIX}")
   # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.me
-  set(OPENSSL_ROOT_DIR "${BREW_PREFIX}/opt/openssl@3")
+  if(NOT DEFINED OPENSSL_VERSION)
+    set(OPENSSL_VERSION "3")
+  endif()
+  set(OPENSSL_ROOT_DIR "${BREW_PREFIX}/opt/openssl@${OPENSSL_VERSION}")
   set(CMAKE_PREFIX_PATH "${BREW_PREFIX}")
   include_directories("${OPENSSL_ROOT_DIR}/include")
   include_directories("${BREW_PREFIX}/include")

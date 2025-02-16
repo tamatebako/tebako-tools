@@ -88,8 +88,4 @@ if(WITH_OPENSSL_BUILD)
     BUILD_BYPRODUCTS ${__LIBSSL} ${__LIBCRYPTO}
   )
 
-else(WITH_OPENSSL_BUILD)
-  find_library(_LIBSSL "libssl.a" REQUIRED HINTS ${DEPS}/lib)
-  find_library(_LIBCRYPTO "libcrypto.a" REQUIRED HINTS ${DEPS}/lib)
-
 endif(WITH_OPENSSL_BUILD)
