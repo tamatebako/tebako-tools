@@ -84,8 +84,11 @@ if(WITH_OPENSSL_BUILD)
     BINARY_DIR ${OPENSSL_BINARY_DIR}
     CONFIGURE_COMMAND   ${GNU_BASH} -c "${OPENSSL_SOURCE_DIR}/config          \
                                                         --openssldir=${DEPS}  \
-                                                        --prefix=${DEPS}"
+                                                        --prefix=${DEPS}      \
+                                                        no-shared"
     BUILD_BYPRODUCTS ${__LIBSSL} ${__LIBCRYPTO}
   )
+
+  set(OPENSSL_ROOT_DIR "${DEPS}")
 
 endif(WITH_OPENSSL_BUILD)

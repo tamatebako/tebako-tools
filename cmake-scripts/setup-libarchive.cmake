@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024 [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2022-2025 [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -27,6 +27,10 @@ def_ext_prj_t(LIBARCHIVE "3.6.2" "9e2c1b80d5fbe59b61308fdfab6c79b5021d7ff4ff2489
 
 message(STATUS "Collecting libarchive - " v${LIBARCHIVE_VER} " at " ${LIBARCHIVE_SOURCE_DIR})
 
+if(DEFINED OPENSSL_ROOT_DIR)
+  set(OPENSSL_DIR_OPT "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
+endif(DEFINED OPENSSL_ROOT_DIR)
+
 set(CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=${DEPS}
                     -DCMAKE_BUILD_TYPE=Release
                     -DBUILD_SHARED_LIBS:BOOL=OFF
@@ -41,13 +45,14 @@ set(CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=${DEPS}
                     -DENABLE_TEST:BOOL=OFF
                     -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
                     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+                    ${OPENSSL_DIR_OPT}
 )
 
-if(TEBAKO_BUILD_TARGET)
+if(DEFINED TEBAKO_BUILD_TARGET)
   list(APPEND CMAKE_ARGUMENTS  -DCMAKE_C_FLAGS=--target=${TEBAKO_BUILD_TARGET})
   list(APPEND CMAKE_ARGUMENTS  -DCMAKE_EXE_LINKER_FLAGS=--target=${TEBAKO_BUILD_TARGET})
   list(APPEND CMAKE_ARGUMENTS  -DCMAKE_SHARED_LINKER_FLAGS=--target=${TEBAKO_BUILD_TARGET})
-endif(TEBAKO_BUILD_TARGET)
+endif(DEFINED TEBAKO_BUILD_TARGET)
 
   # ...................................................................
   # libarchive is the module that creates the real pain here

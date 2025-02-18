@@ -206,5 +206,5 @@ jobs:
       - name: Test
         run: |
           set -o errexit -o pipefail -o noclobber -o nounset
-          v=$(LD_LIBRARY_PATH="$PWD/build/setup-openssl/deps/lib":%LD_LIBRARY_PATH% build/setup-openssl/deps/bin/openssl version)
+          v=$(build/setup-openssl/deps/bin/openssl version)
           [ "$v" = "OpenSSL 1.1.1w  11 Sep 2023" ]
