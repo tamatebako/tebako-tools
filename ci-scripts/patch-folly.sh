@@ -499,6 +499,8 @@ EOM
   defined_msc_ver_to_win32 "$1/folly/external/farmhash/farmhash.cpp"
   defined_msc_ver_to_win32 "$1/folly/detail/IPAddressSource.h"
   defined_msc_ver_to_win32 "$1/folly/portability/Sockets.cpp"
+  defined_win32_to_msc_ver "$1/folly/portability/Sched.h"
+  defined_win32_to_msc_ver "$1/folly/portability/Sched.cpp"
 
   defined_n_win32_to_msc_ver "$1/folly/portability/Dirent.h"
   defined_win32_to_msc_ver "$1/folly/portability/Dirent.cpp"
