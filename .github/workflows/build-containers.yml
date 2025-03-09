@@ -1,0 +1,174 @@
+name: build-containers
+
+on:
+  workflow_dispatch:
+    inputs:
+      next_version:
+        description: |
+          Next container version: x.y.z or major/minor/patch
+        required: true
+        default: 'patch'
+      push:
+        description: |
+          Push the container images to the registry
+        required: false
+        default: 'false'
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.job }}-${{ github.head_ref || github.ref_name }}'
+  cancel-in-progress: true
+
+jobs:
+  build-containers:
+    name: ${{ matrix.container }} ${{ matrix.architecture.platform }}
+    runs-on: ${{ matrix.architecture.host }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - 'ubuntu-20.04-dev'
+          - 'alpine-3.17-dev'
+        architecture:
+          - { host: 'ubuntu-22.04', platform: linux/amd64, suffix: 'x64', suffix2: 'amd64' }
+          - { host: 'ubuntu-22.04-arm', platform: linux/arm64, suffix: 'arm64', suffix2: 'arm64' }
+
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set GITHUB_REF
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+            if [[ "${{ github.event.inputs.next_version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              # Direct version number provided
+              VERSION="${{ github.event.inputs.next_version }}"
+              echo "Using provided version: $VERSION"
+            elif [[ "${{ github.event.inputs.next_version }}" == "major" || "${{ github.event.inputs.next_version }}" == "minor" || "${{ github.event.inputs.next_version }}" == "patch" ]]; then
+              # Get latest version tag
+              LATEST_TAG=$(git tag --sort=-v:refname | grep -v '\.rc[0-9]\+$' | head -n 1)
+              LATEST_VERSION=${LATEST_TAG#v}
+
+              # Split the version numbers
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_VERSION"
+
+              # Calculate the next version based on the increment type
+              if [[ "${{ github.event.inputs.next_version }}" == "major" ]]; then
+                VERSION="$((MAJOR + 1)).0.0"
+              elif [[ "${{ github.event.inputs.next_version }}" == "minor" ]]; then
+                VERSION="${MAJOR}.$((MINOR + 1)).0"
+              else
+                VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+              fi
+              echo "Calculated next ${{ github.event.inputs.next_version }} version: $VERSION"
+            else
+              echo "::error::Invalid version format. Please use semantic version (x.y.z) or specify 'major', 'minor', or 'patch'"
+              exit 1
+            fi
+
+            TAG="v$VERSION"
+            echo "Setting VERSION to $VERSION"
+            echo "Setting GITHUB_REF to refs/tags/$TAG"
+            echo "GITHUB_REF=refs/tags/$TAG" >> $GITHUB_ENV
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}
+          tags: |
+            type=semver,pattern={{version}}-${{ matrix.architecture.suffix2 }},value=${{ env.VERSION }}
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.architecture.suffix2 }},value=${{ env.VERSION }}
+            type=semver,pattern={{major}}-${{ matrix.architecture.suffix2 }},value=${{ env.VERSION }}
+            type=sha,suffix=-${{ matrix.architecture.suffix2 }}
+#          labels: |
+#            org.opencontainers.image.vendor=Ribose Inc.
+#            org.opencontainers.image.licenses=BSD-2-Clause
+#            org.opencontainers.image.documentation=https://www.tamatebako.org
+#            org.opencontainers.image.source==${{ github.repositoryUrl }}
+#            org.opencontainers.image.description=Tebako executable packager ${{ matrix.container }} ${{ matrix.architecture.platform }} development container
+          labels: |
+            org.opencontainers.image.vendor=Maxim Samsonov
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.documentation=https://sw.consulting
+            org.opencontainers.image.source==${{ github.repositoryUrl }}
+            org.opencontainers.image.description=Tebako ${{ matrix.container }} ${{ matrix.architecture.platform }} development container
+#          annotations: |
+#            org.opencontainers.image.licenses=BSD-2-Clause
+#            org.opencontainers.image.description=Tebako executable packager ${{ matrix.container }} ${{ matrix.architecture.platform }} development container
+          annotations: |
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.description=Tebako ${{ matrix.container }} ${{ matrix.architecture.platform }} development container
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          file: docker/${{ matrix.container }}.Dockerfile
+          push:  ${{ github.event.inputs.push == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          platforms: ${{ matrix.architecture.platform }}
+          build-args: ARCH=${{ matrix.architecture.suffix }}
+
+  create-manifests:
+    name: Create multiarchitecture manifests for ${{ matrix.container }}
+    if: ${{ github.event.inputs.push == 'true' }}
+    runs-on: ubuntu-22.04
+    needs: build-containers
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - 'ubuntu-20.04-dev'
+          - 'alpine-3.17-dev'
+    steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multiarchitecture manifests and push
+        run: |
+            for tag in $(echo "${{ needs.build-containers.outputs.tags }}" | tr ',' '\n'); do
+              if [[ $tag != *:latest ]]; then
+                base_tag=$(echo $tag | sed -E 's/.*:(.*)-(amd64|arm64)/\1/')
+                echo "Processing $tag, using base tag $base_tag"
+                docker manifest create \
+                  ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:$base_tag \
+                    --amend ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:$base_tag-amd64 \
+                    --amend ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:$base_tag-arm64
+                 docker manifest push ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:$base_tag
+
+                if [[ $base_tag == sha* ]]; then
+                  docker manifest push ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:$base_tag
+                  docker manifest create \
+                    ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:latest \
+                      --amend ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:$base_tag-amd64 \
+                      --amend ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:$base_tag-arm64
+                  docker manifest push ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}:latest
+                fi
+              fi
+            done
