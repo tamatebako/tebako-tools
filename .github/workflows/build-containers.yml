@@ -26,7 +26,6 @@
 name: build-containers
 
 on:
-  push:
   workflow_dispatch:
     inputs:
       next_version:
