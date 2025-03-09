@@ -1,4 +1,4 @@
-# Copyright (c) 2024, [Ribose Inc](https://www.ribose.com).
+# Copyright (c) 2024-2025, [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of tebako
 #
@@ -27,7 +27,7 @@ name: test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
   pull_request:
   workflow_dispatch:
 
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-13, macos-14 ]
+        os: [ macos-13, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,16 +75,99 @@ jobs:
           test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-targets-release.cmake
           test -f build/setup-libfmt/deps/lib/pkgconfig/fmt.pc
 
+  test-setup-libfmt-co:
+    name: test setup-libfmt on ${{ matrix.architecture.platform }}/${{ matrix.container }}
+    runs-on: ${{ matrix.architecture.host }}
+    container:
+      image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        container: [ 'ubuntu-20.04-dev', 'alpine-3.17-dev' ]
+        architecture:
+          - { host: 'ubuntu-22.04', platform: linux/amd64 }
+          - { host: 'ubuntu-22.04-arm', platform: linux/arm64 }
+
+    steps:
+      #  JavaScript Actions in Alpine containers are only supported on x64 Linux runners. Doing Linux Arm64
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libfmt -DROOT=$PWD -S tests/setup-libfmt
+          cmake --build build/setup-libfmt
+
+      - name: Test setup-libfmt
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libfmt/deps/lib/libfmt.a
+          test -f build/setup-libfmt/deps/include/fmt/args.h
+          test -f build/setup-libfmt/deps/include/fmt/chrono.h
+          test -f build/setup-libfmt/deps/include/fmt/color.h
+          test -f build/setup-libfmt/deps/include/fmt/compile.h
+          test -f build/setup-libfmt/deps/include/fmt/core.h
+          test -f build/setup-libfmt/deps/include/fmt/format.h
+          test -f build/setup-libfmt/deps/include/fmt/format-inl.h
+          test -f build/setup-libfmt/deps/include/fmt/os.h
+          test -f build/setup-libfmt/deps/include/fmt/ostream.h
+          test -f build/setup-libfmt/deps/include/fmt/printf.h
+          test -f build/setup-libfmt/deps/include/fmt/ranges.h
+          test -f build/setup-libfmt/deps/include/fmt/std.h
+          test -f build/setup-libfmt/deps/include/fmt/xchar.h
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-config.cmake
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-config-version.cmake
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-targets.cmake
+          test -f build/setup-libfmt/deps/lib/cmake/fmt/fmt-targets-release.cmake
+          test -f build/setup-libfmt/deps/lib/pkgconfig/fmt.pc
+
   test-setup-librachive:
     name: test setup-librachive on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-13, macos-14 ]
+        os: [ macos-13, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-librachive -DROOT=$PWD tests/setup-librachive
+          cmake --build build/setup-librachive
+
+      - name: Test setup-librachive
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-librachive/deps/lib/pkgconfig/libarchive.pc
+          test -f build/setup-librachive/deps/lib/libarchive.so || test -f build/setup-librachive/deps/lib/libarchive.dylib
+          test -f build/setup-librachive/deps/lib/libarchive.a
+          test -f build/setup-librachive/deps/include/archive.h
+          test -f build/setup-librachive/deps/include/archive_entry.h
+
+  test-setup-librachive-co:
+    name: test setup-librachive on ${{ matrix.architecture.platform }}/${{ matrix.container }}
+    runs-on: ${{ matrix.architecture.host }}
+    container:
+      image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        container: [ 'ubuntu-20.04-dev', 'alpine-3.17-dev' ]
+        architecture:
+          - { host: 'ubuntu-22.04', platform: linux/amd64 }
+          - { host: 'ubuntu-22.04-arm', platform: linux/arm64 }
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
 
       - name: Run cmake script
         run: |
@@ -106,10 +189,40 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-13, macos-14 ]
+        os: [ macos-13, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libutfcpp -DROOT=$PWD tests/setup-libutfcpp
+          cmake --build build/setup-libutfcpp
+
+      - name: Test setup-libutfcpp
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libutfcpp/deps/include/utf8.h
+          test -d build/setup-libutfcpp/deps/include/utf8
+
+  test-setup-libutfcpp-co:
+    name: test setup-libutfcpp on ${{ matrix.architecture.platform }}/${{ matrix.container }}
+    runs-on: ${{ matrix.architecture.host }}
+    container:
+      image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        container: [ 'ubuntu-20.04-dev', 'alpine-3.17-dev' ]
+        architecture:
+          - { host: 'ubuntu-22.04', platform: linux/amd64 }
+          - { host: 'ubuntu-22.04-arm', platform: linux/arm64 }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
 
       - name: Run cmake script
         run: |
@@ -128,10 +241,39 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-13 ]
+        os: [ macos-13, macos-14 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Run cmake script
+        run: |
+          cmake -B build/setup-libhowardhinnerdate -DROOT=$PWD tests/setup-libhowardhinnerdate
+          cmake --build build/setup-libhowardhinnerdate
+
+      - name: Test setup-libhowardhinnerdate
+        run: |
+          set -o errexit -o pipefail -o noclobber -o nounset
+          test -f build/setup-libhowardhinnerdate/deps/include/date/date.h
+
+  test-setup-libhowardhinnerdate-co:
+    name: test setup-libhowardhinnerdate on ${{ matrix.architecture.platform }}/${{ matrix.container }}
+    runs-on: ${{ matrix.architecture.host }}
+    container:
+      image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        container: [ 'ubuntu-20.04-dev', 'alpine-3.17-dev' ]
+        architecture:
+          - { host: 'ubuntu-22.04', platform: linux/amd64 }
+          - { host: 'ubuntu-22.04-arm', platform: linux/arm64 }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
 
       - name: Run cmake script
         run: |
@@ -187,7 +329,7 @@ jobs:
     name: test openssl 1.1.1 setup on alpine
     runs-on: ubuntu-latest
     container:
-      image: alpine:3.17
+      image: 'ghcr.io/${{ github.repository_owner }}/tebako-alpine-3.17-dev'
 
     steps:
       - name: Install packages
