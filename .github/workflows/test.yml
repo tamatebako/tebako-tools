@@ -76,7 +76,7 @@ jobs:
           test -f build/setup-libfmt/deps/lib/pkgconfig/fmt.pc
 
   test-setup-libfmt-co:
-    name: test setup-libfmt on ${{ matrix.architecture.platform }} / ${{ matrix.container }}
+    name: test setup-libfmt on ${{ matrix.architecture.platform }}/${{ matrix.container }}
     runs-on: ${{ matrix.architecture.host }}
     container:
       image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
@@ -150,7 +150,7 @@ jobs:
           test -f build/setup-librachive/deps/include/archive_entry.h
 
   test-setup-librachive-co:
-    name: test setup-librachive on ${{ matrix.architecture.platform }} / ${{ matrix.container }}
+    name: test setup-librachive on ${{ matrix.architecture.platform }}/${{ matrix.container }}
     runs-on: ${{ matrix.architecture.host }}
     container:
       image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
@@ -206,7 +206,7 @@ jobs:
           test -d build/setup-libutfcpp/deps/include/utf8
 
   test-setup-libutfcpp-co:
-    name: test setup-libutfcpp on ${{ matrix.architecture.platform }} / ${{ matrix.container }}
+    name: test setup-libutfcpp on ${{ matrix.architecture.platform }}/${{ matrix.container }}
     runs-on: ${{ matrix.architecture.host }}
     container:
       image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
@@ -257,7 +257,7 @@ jobs:
           test -f build/setup-libhowardhinnerdate/deps/include/date/date.h
 
   test-setup-libhowardhinnerdate-co:
-    name: test setup-libhowardhinnerdate on ${{ matrix.architecture.platform }} / ${{ matrix.container }}
+    name: test setup-libhowardhinnerdate on ${{ matrix.architecture.platform }}/${{ matrix.container }}
     runs-on: ${{ matrix.architecture.host }}
     container:
       image: 'ghcr.io/${{ github.repository_owner }}/tebako-${{ matrix.container }}'
