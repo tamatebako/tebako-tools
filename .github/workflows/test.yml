@@ -316,9 +316,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Install packages
         run: brew install flex bison bash
 
