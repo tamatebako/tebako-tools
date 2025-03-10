@@ -38,7 +38,7 @@ RUN apt-get -y update && \
     libboost-regex-dev libboost-thread-dev libbrotli-dev libunwind-dev        \
     libdwarf-dev libelf-dev libgoogle-glog-dev libffi-dev libgdbm-dev         \
     libyaml-dev libncurses-dev libreadline-dev libutfcpp-dev libstdc++-10-dev \
-    gcc-10 g++-10 ruby
+    gcc-10 g++-10 ruby curl gpg gcovr ccache
 
 ENV CC=clang-12
 ENV CXX=clang++-12
