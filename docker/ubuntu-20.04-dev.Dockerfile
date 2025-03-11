@@ -38,13 +38,14 @@ RUN apt-get -y update && \
     libboost-regex-dev libboost-thread-dev libbrotli-dev libunwind-dev        \
     libdwarf-dev libelf-dev libgoogle-glog-dev libffi-dev libgdbm-dev         \
     libyaml-dev libncurses-dev libreadline-dev libutfcpp-dev libstdc++-10-dev \
-    gcc-10 g++-10 ruby curl gpg gcovr ccache
+    gcc-10 g++-10 curl gpg gcovr ccache
 
 ENV CC=clang-12
 ENV CXX=clang++-12
 
 COPY tools /opt/tools
-RUN /opt/tools/tools.sh install_cmake
+RUN /opt/tools/tools.sh install_cmake && \
+    /opt/tools/tools.sh install_ruby
 
 ENV PS1="\[\]\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ \[\]"
 CMD ["bash"]
