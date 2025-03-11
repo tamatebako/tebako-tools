@@ -40,6 +40,8 @@ RUN apk --no-cache --upgrade add build-base cmake git bash sudo  \
     gettext-dev gperf brotli-dev brotli-static clang libxslt-dev \
     libxslt-static ccache
 
+RUN gem install bundler
+
 ENV CC=clang
 ENV CXX=clang++
 
