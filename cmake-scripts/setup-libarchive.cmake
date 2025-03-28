@@ -82,7 +82,7 @@ endif(${IS_MSYS})
 
 ExternalProject_Add(${LIBARCHIVE_PRJ}
   PREFIX "${DEPS}"
-  URL http://www.libarchive.org/downloads/libarchive-${LIBARCHIVE_VER}.tar.xz
+  URL https://www.libarchive.org/downloads/libarchive-${LIBARCHIVE_VER}.tar.xz
   URL_HASH SHA256=${LIBARCHIVE_HASH}
   DOWNLOAD_NO_PROGRESS true
   UPDATE_COMMAND ""
