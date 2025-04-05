@@ -74,11 +74,7 @@ endif(DEFINED TEBAKO_BUILD_TARGET)
   # Method #1 is implemented here.
   # ...................................................................
 
-if(${IS_MSYS})
-  set(__LIBARCHIVE "${DEPS}/lib/libarchive_static.a")
-else(${IS_MSYS})
-  set(__LIBARCHIVE "${DEPS}/lib/libarchive.a")
-endif(${IS_MSYS})
+set(__LIBARCHIVE "${DEPS}/lib/libarchive.a")
 
 ExternalProject_Add(${LIBARCHIVE_PRJ}
   PREFIX "${DEPS}"
