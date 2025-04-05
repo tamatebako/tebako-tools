@@ -52,6 +52,10 @@ else
   exit 1
 fi
 
+re="cmake_minimum_required(VERSION 3.1.3 FATAL_ERROR)"
+sbst="cmake_minimum_required(VERSION 3.24.0)"
+do_patch "$1/CMakeLists.txt"  "$re" "$sbst"
+
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
   re="ftruncate(file\.fd(), finalBufferSize),"
   sbst="folly::portability::unistd::ftruncate(file.fd(), finalBufferSize), \/* tebako patched *\/"
