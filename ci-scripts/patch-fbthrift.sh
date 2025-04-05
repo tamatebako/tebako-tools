@@ -43,6 +43,11 @@ do_patch_multiline() {
   "$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
 }
 
+re="cmake_minimum_required(VERSION 3.1.3 FATAL_ERROR)"
+sbst="cmake_minimum_required(VERSION 3.24.0)"
+do_patch "$1/CMakeLists.txt"  "$re" "$sbst"
+
+
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
   gSed="sed"
 elif [[ "$OSTYPE" == "darwin"* ]]; then

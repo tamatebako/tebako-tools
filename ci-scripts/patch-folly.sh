@@ -148,6 +148,11 @@ funky_formatter_patch() {
   do_patch "$1" "$re" "$sbst"
 }
 
+
+re="cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)"
+sbst="cmake_minimum_required(VERSION 3.24.0)"
+do_patch "$1/CMakeLists.txt"  "$re" "$sbst"
+
 if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
   re="#elif defined(__FreeBSD__)"
