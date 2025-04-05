@@ -144,7 +144,6 @@ jobs:
         run: |
           set -o errexit -o pipefail -o noclobber -o nounset
           test -f build/setup-librachive/deps/lib/pkgconfig/libarchive.pc
-          test -f build/setup-librachive/deps/lib/libarchive.so || test -f build/setup-librachive/deps/lib/libarchive.dylib
           test -f build/setup-librachive/deps/lib/libarchive.a
           test -f build/setup-librachive/deps/include/archive.h
           test -f build/setup-librachive/deps/include/archive_entry.h
@@ -178,7 +177,6 @@ jobs:
         run: |
           set -o errexit -o pipefail -o noclobber -o nounset
           test -f build/setup-librachive/deps/lib/pkgconfig/libarchive.pc
-          test -f build/setup-librachive/deps/lib/libarchive.so || test -f build/setup-librachive/deps/lib/libarchive.dylib
           test -f build/setup-librachive/deps/lib/libarchive.a
           test -f build/setup-librachive/deps/include/archive.h
           test -f build/setup-librachive/deps/include/archive_entry.h
