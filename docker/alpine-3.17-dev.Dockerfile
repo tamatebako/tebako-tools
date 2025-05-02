@@ -38,7 +38,7 @@ RUN apk --no-cache --upgrade add build-base cmake git bash sudo  \
     gdbm-dev yaml-dev yaml-static ncurses-dev ncurses-static     \
     readline-dev readline-static p7zip ruby-dev  jemalloc-dev    \
     gettext-dev gperf brotli-dev brotli-static clang libxslt-dev \
-    libxslt-static ccache double-conversion-dev glog-dev
+    libxslt-static ccache double-conversion-dev glog-dev zstd-dev
 
 RUN gem install bundler
 
