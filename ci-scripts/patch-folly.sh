@@ -196,7 +196,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 # -- End of tebako patch --
 EOM
 
-  do_patch_multiline  "$1/CMakeLists.txt" "$re" "$sbst"
+  "$GNU_SED" -i "s/$re/${sbst//$'\n'/"\\n"}/g"  "$1/CMakeLists.txt"
 
   re="set(OPENSSL_LIBRARIES \"\/usr\/local\/opt\/openssl\/lib\" )"
   sbst="set(OPENSSL_LIBRARIES \"\${OPENSSL_ROOT_DIR}\/lib\")    # tebako patched"
