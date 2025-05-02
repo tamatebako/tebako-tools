@@ -1,4 +1,5 @@
-# Copyright (c) 2024-2025 [Ribose Inc](https://www.ribose.com).
+#! /bin/bash
+# Copyright (c) 2025 [Ribose Inc](https://www.ribose.com).
 # All rights reserved.
 # This file is a part of the Tebako project.
 #
@@ -23,27 +24,34 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-FROM alpine:3.17
+set -o errexit -o pipefail -o noclobber -o nounset
 
-ENV TZ=Etc/UTC
-ENV ARCH=x64
+# ....................................................
+restore_and_save() {
+  echo "Patching $1"
+  test -e "$1.old" && cp -f "$1.old" "$1"
+  cp -f "$1" "$1.old"
+}
 
-RUN apk --no-cache --upgrade add build-base cmake git bash sudo  \
-    autoconf boost-static boost-dev flex-dev bison make clang    \
-    binutils-dev libevent-dev acl-dev sed python3 pkgconfig curl \
-    lz4-dev openssl-dev zlib-dev xz ninja zip unzip tar xz-dev   \
-    libunwind-dev libdwarf-dev gflags-dev elfutils-dev gcompat   \
-    libevent-static openssl-libs-static lz4-static libffi-dev    \
-    zlib-static libunwind-static acl-static fmt-dev xz-static    \
-    gdbm-dev yaml-dev yaml-static ncurses-dev ncurses-static     \
-    readline-dev readline-static p7zip ruby-dev  jemalloc-dev    \
-    gettext-dev gperf brotli-dev brotli-static clang libxslt-dev \
-    libxslt-static ccache double-conversion-dev glog-dev
+do_patch() {
+  restore_and_save "$1"
+  "$gSed" -i "s/$2/$3/g" "$1"
+}
 
-RUN gem install bundler
+do_patch_multiline() {
+  restore_and_save "$1"
+  "$gSed" -i "s/$re/${sbst//$'\n'/"\\n"}/g" "$1"
+}
 
-ENV CC=clang
-ENV CXX=clang++
+if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* || "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+  gSed="sed"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  gSed="gsed"
+else
+  echo "Unknown OSTYPE=$OSTYPE"
+  exit 1
+fi
 
-ENV PS1="\[\]\[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ \[\]"
-CMD ["bash"]
+re="cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)"
+sbst="cmake_minimum_required(VERSION 3.24.0)"
+do_patch "$1/build/cmake/CMakeLists.txt"  "$re" "$sbst"
