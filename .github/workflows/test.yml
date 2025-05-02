@@ -28,7 +28,13 @@ name: test
 on:
   push:
     branches: [ master, main ]
+    paths-ignore:
+      - 'docker/**'
+      - '.github/workflows/build-containers.yml'
   pull_request:
+    paths-ignore:
+      - 'docker/**'
+      - '.github/workflows/build-containers.yml'
   workflow_dispatch:
 
 concurrency:
