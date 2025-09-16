@@ -140,6 +140,10 @@ funky_time_patch() {
   re="tm\* localtime_r(const time_t\* t, tm\* o)"
   sbst="tm* _folly_localtime_r(const time_t* t, tm* o) \/* tebako patched *\/"
   "$GNU_SED" -i "s/$re/$sbst/g" "$1"
+
+  re="int nanosleep(const struct timespec\* request, struct timespec\* remain) {"
+  sbst="int _folly_nanosleep(const struct timespec* request, struct timespec* remain) { \/* tebako patched *\/"
+  "$GNU_SED" -i "s/$re/$sbst/g" "$1"
 }
 
 funky_formatter_patch() {
