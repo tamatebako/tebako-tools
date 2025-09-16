@@ -52,9 +52,21 @@ else
   exit 1
 fi
 
+re="find_package(Boost REQUIRED filesystem)"
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+if (POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
+find_package(Boost REQUIRED filesystem)
+EOM
+do_patch_multiline "$1/CMakeLists.txt"  "$re" "$sbst"
+
 re="cmake_minimum_required(VERSION 3.1.3 FATAL_ERROR)"
 sbst="cmake_minimum_required(VERSION 3.24.0)"
-do_patch "$1/CMakeLists.txt"  "$re" "$sbst"
+"$gSed" -i "s/$re/$sbst/g" "$1/CMakeLists.txt"
+
 
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
   re="ftruncate(file\.fd(), finalBufferSize),"

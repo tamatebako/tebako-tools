@@ -153,6 +153,22 @@ re="cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)"
 sbst="cmake_minimum_required(VERSION 3.24.0)"
 do_patch "$1/CMakeLists.txt"  "$re" "$sbst"
 
+
+re="find_package(Boost 1.51.0 MODULE"
+# shellcheck disable=SC2251
+! IFS= read -r -d '' sbst << EOM
+if (POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
+find_package(Boost 1.67.0 COMPONENTS
+EOM
+do_patch_multiline "$1/CMake/folly-deps.cmake"  "$re" "$sbst"
+
+re="    system"
+sbst="#    system    tebako patched"
+"$GNU_SED" -i "s/$re/$sbst/g" "$1/CMake/folly-deps.cmake"
+
 if [[ "$OSTYPE" == "linux-musl"* ]]; then
 # https://github.com/facebook/folly/issues/1478
   re="#elif defined(__FreeBSD__)"
