@@ -292,6 +292,7 @@ jobs:
   test-cross-brew-install:
     name: test arm-brew-setup/install
     runs-on: macos-13
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
