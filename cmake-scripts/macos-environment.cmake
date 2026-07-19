@@ -59,9 +59,18 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
     set(OPENSSL_VERSION "3")
   endif()
   set(OPENSSL_ROOT_DIR "${BREW_PREFIX}/opt/openssl@${OPENSSL_VERSION}")
+
+  # IMPORTANT: Set CMAKE_PREFIX_PATH but do NOT add Homebrew include directories
+  # globally. vcpkg provides our dependencies and its includes must take precedence.
+  # Homebrew's include paths would conflict with vcpkg packages (e.g., dwarfs).
+  # Only add specific Homebrew package includes when explicitly needed via target_*
+  # functions, not global include_directories().
+  #
+  # Previously this file had:
+  #   include_directories("${OPENSSL_ROOT_DIR}/include")
+  #   include_directories("${BREW_PREFIX}/include")
+  # These caused Homebrew's dwarfs headers to shadow vcpkg's newer dwarfs headers.
   set(CMAKE_PREFIX_PATH "${BREW_PREFIX}")
-  include_directories("${OPENSSL_ROOT_DIR}/include")
-  include_directories("${BREW_PREFIX}/include")
 
   #  https://stackoverflow.com/questions/53877344/cannot-configure-cmake-to-look-for-homebrew-installed-version-of-bison
   find_and_set_homebrew_prefix("bison" "BISON" "BISON_EXECUTABLE")
