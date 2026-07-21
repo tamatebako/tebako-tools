@@ -117,6 +117,11 @@ function(determine_version source_dir var_prefix)
     set(has_release_tag YES)
     message(STATUS "Found annotated tag ${version}")
   endif()
+  # git describe embeds the tag name, so a pre-release suffix in the tag
+  # breaks the grammar below (e.g. tagging v0.12.0-rc1 yields
+  # "v0.12.0-rc1-0-gdeadbee"). Normalize the suffix away before extraction;
+  # the pre-release marker only lives in the tag, not in the version triple.
+  string(REGEX REPLACE "^(v?[0-9]+\\.[0-9]+\\.[0-9]+)-(alpha|beta|rc|pre)[0-9]*(-[0-9]+-g[0-9a-f]+(-dirty)?(\\+[0-9]+)?)$" "\\1\\3" version "${version}")
   extract_version_info("${version}" "${local_prefix}")
   if ("${has_version_txt}" AND NOT ${base_version} STREQUAL ${local_prefix}_VERSION)
     message(WARNING "Tagged version ${${local_prefix}_VERSION} doesn't match one from the version.txt: ${base_version}")
